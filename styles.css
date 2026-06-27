@@ -401,21 +401,44 @@ html, body {
 }
 #restart-btn:hover, #intro-close:hover { filter: brightness(1.2); }
 
+/* Tablet & landscape phones — tighten HUD, hide keyboard hotkeys */
 @media (max-width: 720px) {
-  .hud-section { padding: 3px 6px; font-size: 11px; }
-  .hud-section .label { font-size: 9px; }
-  .hud-section.inventory { gap: 8px; }
-  .build-btn { min-width: 50px; padding: 3px 4px; }
-  .build-btn .icon { font-size: 16px; }
-  .build-btn .label { font-size: 8px; }
-  .build-btn .cost { font-size: 8px; }
-  #start-wave-btn { padding: 6px 10px; font-size: 11px; }
-  #tool-hint { bottom: 100px; font-size: 10px; }
+  .hud-section { padding: 4px 8px; font-size: 12px; }
+  .hud-section .label { font-size: 10px; }
+  .hud-section.inventory { gap: 10px; }
+  .build-btn .hotkey { display: none; }
+  #start-wave-btn { padding: 8px 14px; font-size: 12px; }
 }
 
-@media (max-width: 460px) {
-  .build-btn .label { display: none; }
-  .build-btn .hotkey { display: none; }
-  .build-btn { min-width: 38px; }
+/* Phone portrait — big touch-friendly build buttons, 5-per-row layout */
+@media (max-width: 600px) {
   .hud-section .label { display: none; }
+  /* Bigger tap targets for HUD buttons (compound selector beats .hud-section padding) */
+  .hud-btn.hud-section { font-size: 20px; padding: 8px 12px; }
+
+  #build-menu {
+    gap: 5px;
+    padding: 6px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  .build-btn {
+    /* exactly 5 per row → 2 rows for 10 buttons */
+    flex: 1 1 calc(20% - 5px);
+    max-width: calc(20% - 5px);
+    min-width: 0;
+    padding: 10px 4px 8px;
+  }
+  .build-btn .label { display: none; }
+  .build-btn .icon { font-size: 26px; line-height: 1.15; }
+  .build-btn .cost { font-size: 11px; margin-top: 4px; color: var(--text); }
+  .build-btn.disabled .cost { color: var(--text-dim); }
+
+  #tool-hint { bottom: 130px; font-size: 12px; padding: 7px 14px; }
+}
+
+/* Smallest phones — keep 5-per-row but trim padding/icon */
+@media (max-width: 380px) {
+  .build-btn { padding: 8px 2px 6px; }
+  .build-btn .icon { font-size: 22px; }
+  .build-btn .cost { font-size: 10px; }
+  #tool-hint { bottom: 116px; }
 }
