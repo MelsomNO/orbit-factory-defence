@@ -9,18 +9,30 @@
     const vh = (vv && vv.height) || window.innerHeight;
     const docEl = document.documentElement;
     docEl.style.setProperty('--vh', vh + 'px');
-    // visualViewport.offsetTop > 0 → soft keyboard or top inset is pushing
-    // content; the gap from viewport-bottom to layout-bottom is the bottom UI
-    // overlay we need to clear.
     let menuOffset = 0;
     if (vv) {
       menuOffset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
     }
-    // Vivaldi mobile's bottom address bar / tab strip doesn't subtract from
-    // visualViewport, so reserve a sensible minimum offset there.
     if (menuOffset < 56 && /Vivaldi/i.test(navigator.userAgent)) menuOffset = 56;
     docEl.style.setProperty('--menu-bottom-offset', menuOffset + 'px');
     if (typeof Render !== 'undefined' && Render.canvas) Render.resize();
+    updateDebug();
+  }
+  function updateDebug() {
+    const el = document.getElementById('debug-overlay');
+    if (!el) return;
+    const vv = window.visualViewport;
+    const menu = document.getElementById('build-menu');
+    const r = menu ? menu.getBoundingClientRect() : null;
+    const docEl = document.documentElement;
+    const parts = [];
+    parts.push(`iH:${window.innerHeight}`);
+    if (vv) parts.push(`vv:${Math.round(vv.width)}x${Math.round(vv.height)}@${Math.round(vv.offsetTop)}`);
+    parts.push(`mo:${docEl.style.getPropertyValue('--menu-bottom-offset') || '?'}`);
+    if (r) parts.push(`menu:${Math.round(r.top)}-${Math.round(r.bottom)} ${r.height > 0 ? 'H'+Math.round(r.height) : 'h0'}`);
+    parts.push(`viv:${/Vivaldi/i.test(navigator.userAgent)?'Y':'N'}`);
+    parts.push(`dpr:${window.devicePixelRatio}`);
+    el.textContent = parts.join(' | ');
   }
   updateVH();
   window.addEventListener('resize', updateVH);
@@ -29,10 +41,10 @@
     window.visualViewport.addEventListener('resize', updateVH);
     window.visualViewport.addEventListener('scroll', updateVH);
   }
-  // Some mobile browsers don't fire resize when their UI animates; poll briefly
-  // after focus / load to catch the final layout.
   window.addEventListener('load', () => setTimeout(updateVH, 200));
   setTimeout(updateVH, 1000);
+  // Continuous debug refresh — picks up changes that don't fire any event
+  setInterval(updateDebug, 500);
 
   const canvas = document.getElementById('game-canvas');
   Render.init(canvas);

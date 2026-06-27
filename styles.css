@@ -188,6 +188,23 @@ html, body {
 }
 #tool-hint.visible { opacity: 1; }
 
+#debug-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(180, 30, 30, 0.92);
+  color: #fff;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 10px;
+  line-height: 1.4;
+  padding: 3px 6px;
+  z-index: 99999;
+  pointer-events: none;
+  text-align: center;
+  white-space: pre-wrap;
+}
+
 #info-panel {
   position: absolute;
   top: 56px;
