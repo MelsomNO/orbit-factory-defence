@@ -182,6 +182,28 @@
     closeModifierPicker(card.dataset.mod);
   });
 
+  // Active-modifier badge row — re-rendered only when the level map changes
+  const modListEl = document.getElementById('mod-list');
+  let _lastModSig = '';
+  function updateModifierList() {
+    if (!modListEl) return;
+    const ids = Object.keys(State.modifiers).filter(id => State.modifiers[id] > 0);
+    const sig = ids.map(id => `${id}:${State.modifiers[id]}`).join('|');
+    if (sig === _lastModSig) return;
+    _lastModSig = sig;
+    if (!ids.length) { modListEl.innerHTML = ''; return; }
+    modListEl.innerHTML = ids.map(id => {
+      const def = CONFIG.MODIFIERS[id];
+      const lvl = State.modifiers[id];
+      const stars = '★'.repeat(Math.min(lvl, 5)) + (lvl > 5 ? `×${lvl}` : '');
+      const tip = `${def.label}  Lv ${lvl}\n+ ${def.pos(lvl)}\n− ${def.neg(lvl)}`;
+      return `<div class="mod-badge" title="${tip.replace(/"/g, '&quot;')}">
+        <span class="name">${def.label}</span>
+        <span class="lvl">${stars}</span>
+      </div>`;
+    }).join('');
+  }
+
   let _lastRenderedPick = null;
   function updateModifierPicker() {
     const pick = State.modifierPick;
@@ -372,6 +394,7 @@
     Render.drawFrame();
     updateHUD();
     updateInfoPanel();
+    updateModifierList();
     updateModifierPicker();
 
     requestAnimationFrame(loop);
