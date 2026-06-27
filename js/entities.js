@@ -375,7 +375,10 @@ function effectiveBufferMax(b, key /* 'inputBufferMax' | 'outputBufferMax' */) {
   const recipe = (b === State.hq) ? CONFIG.HQ_RECIPE : CONFIG.FACTORIES[b.type];
   const def = CONFIG.UPGRADES[upgradeKey(b)] && CONFIG.UPGRADES[upgradeKey(b)].storage;
   const delta = def && def.perTier[key] ? def.perTier[key] * getTier(b, 'storage') : 0;
-  return (recipe[key] || 0) + delta;
+  let max = (recipe[key] || 0) + delta;
+  // Modifier: Bulk Storage scales plant buffers
+  if (b !== State.hq) max *= modMul('factory.bufferMul');
+  return Math.max(1, Math.round(max));
 }
 
 // Effective output amount per cycle (modifiers can scale plant output).
@@ -571,6 +574,11 @@ function hqTiles() {
 function updateHQ(dt) {
   const h = State.hq;
   if (!h) return;
+  // Field Repair modifier: passive HP regen
+  const regen = modAdd('hq.regenRate');
+  if (regen > 0 && h.hp > 0 && h.hp < h.maxHp) {
+    h.hp = Math.min(h.maxHp, h.hp + regen * dt);
+  }
   const r = CONFIG.HQ_RECIPE;
   const outputMax = effectiveBufferMax(h, 'outputBufferMax');
   if (h.plateBuffer == null) h.plateBuffer = 0;
@@ -728,16 +736,17 @@ function updateTurrets(dt) {
         if (t.type === 'gun_turret') Sound.gunShot();
         else if (t.type === 'missile_turret') Sound.missileShot();
         const angle = Math.atan2(nearest.y - ty, nearest.x - tx);
+        const projSpeed = def.projectileSpeed * modMul('turret.projectileSpeedMul');
         S.projectiles.push({
           x: tx + Math.cos(angle) * 0.4,
           y: ty + Math.sin(angle) * 0.4,
-          vx: Math.cos(angle) * def.projectileSpeed,
-          vy: Math.sin(angle) * def.projectileSpeed,
+          vx: Math.cos(angle) * projSpeed,
+          vy: Math.sin(angle) * projSpeed,
           damage: effectiveTurretDamage(t),
           life: 3.0,
           color: def.projectileColor,
           target: def.homing ? nearest : null,
-          homingSpeed: def.projectileSpeed,
+          homingSpeed: projSpeed,
           splash: def.splash || 0,
           trail: def.homing,
         });
@@ -822,7 +831,7 @@ function updateEnemies(dt) {
     const dx = hcx - e.x, dy = hcy - e.y;
     const d = Math.hypot(dx, dy);
     if (d < S.hq.size / 2 + 0.3) {
-      S.hq.hp -= def.damage;
+      S.hq.hp -= def.damage * modMul('enemy.hqDamageMul');
       e._dead = true;
       spawnParticles(e.x, e.y, def.color, 14, 4);
       addFloater(hcx, hcy - 0.5, `-${def.damage}`, def.color);
@@ -937,7 +946,7 @@ function updateWaves(dt) {
       if (S.spawnTimer <= 0) {
         spawnEnemy();
         S.enemiesRemainingToSpawn--;
-        S.spawnTimer = CONFIG.WAVE.SPAWN_INTERVAL;
+        S.spawnTimer = Math.max(0.2, CONFIG.WAVE.SPAWN_INTERVAL * modMul('wave.spawnIntervalMul'));
       }
     } else if (S.enemies.length === 0) {
       // wave cleared

@@ -192,6 +192,81 @@ const CONFIG = {
         'power.regenMul': l => 1 - l * 0.05,
       },
     },
+    glass_cannon: {
+      label: 'Glass Cannon',
+      pos: l => `+${l * 8}% turret fire rate`,
+      neg: l => `−${l * 5}% turret range`,
+      mults: {
+        'turret.cooldownMul': l => 1 - l * 0.08,
+        'turret.rangeMul':    l => 1 - l * 0.05,
+      },
+    },
+    sluggish_foes: {
+      label: 'Sluggish Foes',
+      pos: l => `−${l * 5}% enemy speed`,
+      neg: l => `+${l * 8}% enemy HP`,
+      mults: {
+        'enemy.speedMul': l => 1 - l * 0.05,
+        'enemy.hpMul':    l => 1 + l * 0.08,
+      },
+    },
+    surge_protector: {
+      label: 'Surge Protector',
+      pos: l => `+${l * 8}% power regen`,
+      neg: l => `−${l * 5}% power max`,
+      mults: {
+        'power.regenMul': l => 1 + l * 0.08,
+        'power.maxMul':   l => 1 - l * 0.05,
+      },
+    },
+    hunting_pack: {
+      label: 'Hunting Pack',
+      pos: l => `+${l * 8}% ore from kills`,
+      neg: l => `−${l * 5}% spawn interval (faster waves)`,
+      mults: {
+        'enemy.rewardMul':         l => 1 + l * 0.08,
+        'wave.spawnIntervalMul':   l => 1 - l * 0.05,
+      },
+    },
+    steady_aim: {
+      label: 'Steady Aim',
+      pos: l => `+${l * 8}% projectile speed`,
+      neg: l => `−${l * 5}% projectile damage`,
+      mults: {
+        'turret.projectileSpeedMul': l => 1 + l * 0.08,
+        'turret.damageMul':           l => 1 - l * 0.05,
+      },
+    },
+    bulk_storage: {
+      label: 'Bulk Storage',
+      pos: l => `+${l * 8}% plant buffer capacity`,
+      neg: l => `+${l * 5}% plant cycle time`,
+      mults: {
+        'factory.bufferMul': l => 1 + l * 0.08,
+        'factory.timeMul':   l => 1 + l * 0.05,
+      },
+    },
+    field_repair: {
+      label: 'Field Repair',
+      pos: l => `HQ regens +${l} HP/sec`,
+      neg: l => `+${l * 5}% enemy damage to HQ`,
+      mults: {
+        'hq.regenRate':     l => l,                  // additive HP/sec
+        'enemy.hqDamageMul': l => 1 + l * 0.05,
+      },
+    },
+    cache_discovery: {
+      label: 'Cache Discovery',
+      pos: l => `+${l * 20} ore on pickup`,
+      neg: l => `+${l * 5}% enemy speed`,
+      mults: {
+        'enemy.speedMul': l => 1 + l * 0.05,
+      },
+      onApply(prevLvl) {
+        // Grant ore each time the perk is chosen (incl. when stacked)
+        State.inventory.ore = (State.inventory.ore || 0) + 20;
+      },
+    },
   },
 
   HARVESTER: {
