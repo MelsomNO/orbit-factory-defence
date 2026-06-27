@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#08080f">
+  <title>Orbit — Tower Factory Defense</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+
+    <div id="top-hud">
+      <div class="hud-section">
+        <span class="label">RD</span>
+        <span id="round-display">1</span>
+      </div>
+      <div class="hud-section">
+        <span class="label">HQ</span>
+        <span id="hq-hp-display">100</span>
+      </div>
+      <div class="hud-section">
+        <span class="label" id="wave-status">PREP</span>
+        <span id="wave-timer">30</span>
+      </div>
+      <div class="hud-section inventory" id="inventory-display">
+        <span class="inv-item" title="Raw ore — buildings &amp; HQ input"><span class="sym sym-ore">◆</span><span id="inv-ore">50</span></span>
+        <span class="inv-item" title="Plates — HQ output buffer (feed to plants)"><span class="sym sym-plate">▣</span><span id="inv-plate">0</span></span>
+        <span class="inv-item" title="Power — for laser turrets"><span class="sym sym-power">⚡</span><span id="inv-power">0</span>/<span id="inv-power-max">0</span></span>
+      </div>
+      <button id="reset-view-btn" class="hud-section hud-btn" title="Reset view (auto-fit)" aria-label="Reset view" hidden>⌖</button>
+      <button id="mute-btn" class="hud-section hud-btn" title="Mute / Unmute (M)" aria-label="Mute">🔊</button>
+      <button id="pause-btn" class="hud-section hud-btn" title="Pause / Resume (Space)" aria-label="Pause">⏸</button>
+    </div>
+
+    <button id="start-wave-btn" hidden>Start Wave ▶</button>
+
+    <div id="info-panel" hidden>
+      <div class="info-header">
+        <span id="info-title">Building</span>
+        <button id="info-close" aria-label="Close">×</button>
+      </div>
+      <div id="info-body"></div>
+      <div id="info-upgrades" hidden>
+        <div class="upgrade-row">
+          <span class="upg-label" id="upg-speed-label">Speed</span>
+          <span class="upg-tiers" id="upg-speed-tiers"></span>
+          <button class="upg-btn" id="upg-speed-btn" title="Faster cycle / fire rate">—</button>
+        </div>
+        <div class="upgrade-row">
+          <span class="upg-label" id="upg-storage-label">Storage</span>
+          <span class="upg-tiers" id="upg-storage-tiers"></span>
+          <button class="upg-btn" id="upg-storage-btn" title="Bigger buffers / ammo cap">—</button>
+        </div>
+      </div>
+      <div id="info-conveyor-actions" hidden>
+        <button id="info-to-splitter" class="info-action-btn">⊥ Splitter (4◆)</button>
+      </div>
+      <button id="info-demolish" hidden>Demolish</button>
+    </div>
+
+    <div id="pause-overlay" hidden>
+      <h2>PAUSED</h2>
+      <p>Press <b>Space</b> or tap Resume</p>
+      <button id="resume-btn">Resume</button>
+    </div>
+
+    <div id="tool-hint"></div>
+
+    <div id="build-menu">
+      <button class="build-btn" data-tool="harvester" data-cost="ore:5" data-hotkey="1" title="Harvester (1)">
+        <span class="hotkey">1</span>
+        <span class="icon sym-harvester">⬢</span><span class="label">Harvester</span><span class="cost">5◆</span>
+      </button>
+      <button class="build-btn" data-tool="conveyor" data-cost="ore:1" data-hotkey="2" title="Conveyor (2)">
+        <span class="hotkey">2</span>
+        <span class="icon">→</span><span class="label">Conveyor</span><span class="cost">1◆</span>
+      </button>
+      <button class="build-btn" data-tool="refinery" data-cost="ore:12" data-hotkey="3" title="Refinery (3)">
+        <span class="hotkey">3</span>
+        <span class="icon sym-refinery">⚙</span><span class="label">Refinery</span><span class="cost">12◆</span>
+      </button>
+      <button class="build-btn" data-tool="bullet_plant" data-cost="ore:10" data-hotkey="4" title="Bullet Plant (4)">
+        <span class="hotkey">4</span>
+        <span class="icon sym-bullet-plant">▣</span><span class="label">Bullet Plant</span><span class="cost">10◆</span>
+      </button>
+      <button class="build-btn" data-tool="missile_plant" data-cost="ore:20" data-hotkey="5" title="Missile Plant (5)">
+        <span class="hotkey">5</span>
+        <span class="icon sym-missile-plant">▤</span><span class="label">Missile Plant</span><span class="cost">20◆</span>
+      </button>
+      <button class="build-btn" data-tool="power_plant" data-cost="ore:15" data-hotkey="6" title="Power Plant (6)">
+        <span class="hotkey">6</span>
+        <span class="icon sym-power-plant">◈</span><span class="label">Power Plant</span><span class="cost">15◆</span>
+      </button>
+      <button class="build-btn" data-tool="gun_turret" data-cost="ore:15" data-hotkey="7" title="Gun Turret (7)">
+        <span class="hotkey">7</span>
+        <span class="icon sym-gun">†</span><span class="label">Gun</span><span class="cost">15◆</span>
+      </button>
+      <button class="build-btn" data-tool="missile_turret" data-cost="ore:30" data-hotkey="8" title="Missile Turret (8)">
+        <span class="hotkey">8</span>
+        <span class="icon sym-missile-turret">‡</span><span class="label">Missile</span><span class="cost">30◆</span>
+      </button>
+      <button class="build-btn" data-tool="laser_turret" data-cost="ore:40" data-hotkey="9" title="Laser Turret (9)">
+        <span class="hotkey">9</span>
+        <span class="icon sym-laser">※</span><span class="label">Laser</span><span class="cost">40◆</span>
+      </button>
+      <button class="build-btn" data-tool="demolish" data-hotkey="X" title="Demolish (X / Delete)">
+        <span class="hotkey">X</span>
+        <span class="icon">✕</span><span class="label">Demolish</span><span class="cost">—</span>
+      </button>
+    </div>
+
+    <div id="game-over" hidden>
+      <h1>HQ DESTROYED</h1>
+      <p>You survived <span id="rounds-survived">0</span> rounds</p>
+      <button id="restart-btn">Restart</button>
+    </div>
+
+    <div id="intro" hidden>
+      <h2>ORBIT</h2>
+      <p class="tagline">Tower Factory Defense</p>
+      <ul>
+        <li><b>You start with nothing.</b> Tap &amp; drag ore nodes (◆) onto HQ to bootstrap</li>
+        <li><b>Harvester + conveyor</b> auto-delivers ore to HQ</li>
+        <li>HQ refines <span style="color:#d8a050">◆ ore</span> → <span style="color:#80d0e0">▣ plates</span>; convey plates into <b>plants</b></li>
+        <li>Plants make <b>ammo</b>; convey ammo into <b>turrets</b> (10 max each)</li>
+        <li>Lasers draw from global <b>power</b> (power plants)</li>
+        <li>Survive waves — map grows each round</li>
+      </ul>
+      <button id="intro-close">Begin</button>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/sound.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

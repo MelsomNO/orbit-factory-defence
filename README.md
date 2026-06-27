@@ -1,0 +1,126 @@
+# Orbit — Tower Factory Defence
+
+A browser-based incremental tower defence + factory game. Build a refining
+chain, automate ammo production with conveyor belts, and defend your HQ from
+escalating waves of enemies. Works on desktop and mobile.
+
+> **No build step, no dependencies.** Just static HTML / CSS / vanilla JS using
+> the Canvas + Web Audio APIs.
+
+![Orbit gameplay screenshot](screenshot.png)
+<!-- TODO: drop a screenshot here, e.g. take one after building your first factory line -->
+
+## Play
+
+Open `index.html` in any modern browser, or play locally:
+
+```
+git clone https://github.com/MelsomNO/orbit-factory-defence.git
+cd orbit-factory-defence
+# Either just double-click index.html, or:
+python -m http.server 8000   # then visit http://localhost:8000
+```
+
+A tiny static server isn't required — `file://` works fine.
+
+## How it plays
+
+You start with **nothing**. Tap & drag ore (◆) from resource nodes onto HQ to
+bootstrap. HQ refines ore into plates (▣). Convey plates into ammunition plants
+to produce bullets (●) or missiles (▲). Convey ammo into your turrets.
+
+The full chain:
+
+```
+◆ Node → Harvester → Conveyor → HQ → Conveyor → Bullet Plant → Conveyor → Gun Turret
+                                  └→ Conveyor → Missile Plant → Conveyor → Missile Turret
+                                  └→ ⚡ Power Plant → Laser Turret (uses global power)
+```
+
+Turrets each hold up to **10 ammo** (more with storage upgrades). Lasers draw
+from a global ⚡ power pool fed by Power Plants — no ammo belts needed.
+
+### Defence
+
+Each round you get a prep timer (60 s for round 1, 25 s between waves) to build
+and improve your factory. Enemies spawn from the map edge and walk straight at
+the HQ. If they reach it, they hit HQ HP — let too many through and you lose.
+
+| Enemy | HP | Speed | HQ Damage | Unlocks |
+| ----- | -- | ----- | --------- | ------- |
+| 🔴 Grunt | 1× | 1× | 35 | Round 1 |
+| 🟡 Scout | 0.45× | 1.8× | 14 | Round 3 |
+| 🟣 Tank | 3× | 0.55× | 50 | Round 5 |
+| 🟤 Brute | 5.5× | 0.4× | 80 | Round 8 |
+
+(HP and damage scale per round on top of these multipliers.)
+
+### Buildings
+
+- **Harvester** — auto-mines from a node, pushes ore onto adjacent conveyors
+- **Conveyor** — drag to lay; corners auto-curve, T-junctions auto-form
+- **Splitter** — convert a conveyor tile to split 1 input across 2 outputs (alternating)
+- **Refinery** — like HQ but small buffers; useful far from HQ
+- **Bullet / Missile Plant** — consume plates, produce ammo
+- **Power Plant** — adds ⚡ capacity + regen for lasers
+- **Gun / Missile / Laser Turret** — defence
+
+### Upgrades
+
+Each upgradeable building has up to 3 **Speed** tiers and 2 **Storage** tiers
+(missile turret gets **Range** instead of storage). Upgrades visible as stars
+above each building.
+
+### Obstacles
+
+Indestructible rocks scatter on the map and grow with each round's expansion.
+You'll need to route conveyors around them.
+
+## Controls
+
+### Desktop
+
+| Action | Input |
+| ------ | ----- |
+| Build menu hotkeys | `1`–`9`, demolish `X` / `Delete` |
+| Pause / resume | `Space` |
+| Mute / unmute | `M` |
+| Cancel tool | `Esc` |
+| Pan camera | middle / right mouse drag |
+| Zoom | scroll wheel |
+| Reset view | `⌖` button (appears once panned) |
+| Harvest ore | click a node, drag to HQ |
+| Lay conveyor | select Conveyor tool, drag |
+| Inspect / upgrade / demolish | click any building, conveyor, or HQ |
+
+### Mobile
+
+- **Single finger**: tap to place, tap-and-drag to harvest ore / lay conveyor
+- **Two-finger drag**: pan
+- **Pinch**: zoom
+
+## Tech notes
+
+- **Canvas 2D** for everything — entities, particles, build previews
+- **Web Audio API** for procedural SFX (no audio files)
+- **No build tooling** — `index.html` loads vanilla JS files in dependency order
+- All gameplay constants live in `js/config.js` for easy tuning
+
+## File layout
+
+```
+index.html           HUD, intro modal, info panel
+styles.css           layout + responsive HUD
+js/config.js         balance numbers, costs, recipes, enemy & upgrade defs
+js/state.js          singleton State + Grid lookup
+js/world.js          generation: HQ, nodes, obstacles, camera helpers
+js/sound.js          procedural sound effects
+js/entities.js       placement, factory/conveyor/turret/enemy tick logic
+js/render.js         all canvas drawing
+js/input.js          unified pointer (mouse + touch), pan/zoom, hotkeys
+js/main.js           game loop, HUD updates, info panel, intro
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
