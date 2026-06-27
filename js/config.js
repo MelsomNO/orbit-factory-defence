@@ -90,18 +90,17 @@ const CONFIG = {
   MODIFIERS: {
     rich_veins: {
       label: 'Rich Veins',
-      pos: l => `+${l * 100}% node ore & capacity`,
-      neg: l => `−${l * 25}% harvest rate`,
+      pos: l => `+${l * 8}% node ore & capacity`,
+      neg: l => `−${l * 5}% harvest rate`,
       mults: {
-        'node.capacityMul':  l => 1 + l,                 // future nodes
-        'harvester.rateMul': l => 1 + l * 0.25,          // bigger period = slower
+        'node.capacityMul':  l => 1 + l * 0.08,
+        'harvester.rateMul': l => 1 + l * 0.05,          // bigger period = slower
       },
       onApply(prevLvl) {
-        // Retroactively boost existing nodes' max + remaining reserves
+        const newMul = 1 + (prevLvl + 1) * 0.08;
         for (const n of State.resourceNodes) {
           const base = n.maxReserves || CONFIG.RESOURCE_NODE.CAPACITY;
-          const newMax = CONFIG.RESOURCE_NODE.CAPACITY * (1 + (prevLvl + 1));
-          // Top up by the increment so already-depleted nodes don't refill, but capacity rises
+          const newMax = CONFIG.RESOURCE_NODE.CAPACITY * newMul;
           const inc = newMax - base;
           n.maxReserves = newMax;
           n.reserves = Math.min(newMax, n.reserves + inc);
@@ -110,87 +109,87 @@ const CONFIG = {
     },
     reinforced_hull: {
       label: 'Reinforced Hull',
-      pos: l => `+${l * 30} max HQ HP (heals to full)`,
-      neg: l => `−${l * 15}% all production speed`,
+      pos: l => `+${l * 8} max HQ HP (heals to full)`,
+      neg: l => `−${l * 5}% all production speed`,
       mults: {
-        'hq.timeMul':      l => 1 + l * 0.15,
-        'factory.timeMul': l => 1 + l * 0.15,
+        'hq.timeMul':      l => 1 + l * 0.05,
+        'factory.timeMul': l => 1 + l * 0.05,
       },
       onApply() {
-        State.hq.maxHp += 30;
+        State.hq.maxHp += 8;
         State.hq.hp = State.hq.maxHp;
       },
     },
     wider_patrol: {
       label: 'Wider Patrol',
-      pos: l => `+${l * 25}% turret range`,
-      neg: l => `−${l * 20}% turret fire rate`,
+      pos: l => `+${l * 8}% turret range`,
+      neg: l => `−${l * 5}% turret fire rate`,
       mults: {
-        'turret.rangeMul':    l => 1 + l * 0.25,
-        'turret.cooldownMul': l => 1 + l * 0.20,
+        'turret.rangeMul':    l => 1 + l * 0.08,
+        'turret.cooldownMul': l => 1 + l * 0.05,
       },
     },
     munitions_surge: {
       label: 'Munitions Surge',
-      pos: l => `+${l * 5} turret ammo capacity`,
-      neg: l => `−${l * 15}% turret damage`,
+      pos: l => `+${l * 8}% turret ammo capacity`,
+      neg: l => `−${l * 5}% turret damage`,
       mults: {
-        'turret.ammoMaxAdd': l => l * 5,
-        'turret.damageMul':  l => 1 - l * 0.15,
+        'turret.ammoMaxMul': l => 1 + l * 0.08,
+        'turret.damageMul':  l => 1 - l * 0.05,
       },
     },
     overclocked_plants: {
       label: 'Overclocked Plants',
-      pos: l => `+${l * 50}% plant output amount`,
-      neg: l => `+${l * 30}% plant cycle time`,
+      pos: l => `+${l * 8}% plant output amount`,
+      neg: l => `+${l * 6}% plant cycle time`,
       mults: {
-        'factory.outputMul': l => 1 + l * 0.50,
-        'factory.timeMul':   l => 1 + l * 0.30,
+        'factory.outputMul': l => 1 + l * 0.08,
+        'factory.timeMul':   l => 1 + l * 0.06,
       },
     },
     quick_belts: {
       label: 'Quick Belts',
-      pos: l => `+${l * 40}% conveyor speed`,
-      neg: l => `−${l * 20}% harvester rate`,
+      pos: l => `+${l * 8}% conveyor speed`,
+      neg: l => `−${l * 5}% harvester rate`,
       mults: {
-        'conveyor.speedMul': l => 1 + l * 0.40,
-        'harvester.rateMul': l => 1 + l * 0.20,
+        'conveyor.speedMul': l => 1 + l * 0.08,
+        'harvester.rateMul': l => 1 + l * 0.05,
       },
     },
     tough_enemies: {
       label: 'Tough Enemies',
-      pos: l => `+${l * 60}% ore from kills`,
-      neg: l => `+${l * 40}% enemy HP`,
+      pos: l => `+${l * 8}% ore from kills`,
+      neg: l => `+${l * 5}% enemy HP`,
       mults: {
-        'enemy.rewardMul': l => 1 + l * 0.60,
-        'enemy.hpMul':     l => 1 + l * 0.40,
+        'enemy.rewardMul': l => 1 + l * 0.08,
+        'enemy.hpMul':     l => 1 + l * 0.05,
       },
     },
     swarm_tactics: {
       label: 'Swarm Tactics',
-      pos: l => `−${l * 20}% enemy HP`,
-      neg: l => `+${l * 30}% enemies per wave`,
+      pos: l => `−${l * 5}% enemy HP`,
+      neg: l => `+${l * 8}% enemies per wave`,
       mults: {
-        'enemy.hpMul':         l => 1 - l * 0.20,
-        'wave.enemyCountMul':  l => 1 + l * 0.30,
+        'enemy.hpMul':        l => 1 - l * 0.05,
+        'wave.enemyCountMul': l => 1 + l * 0.08,
       },
     },
     heavy_ammo: {
       label: 'Heavy Ammo',
-      pos: l => `+${l * 50}% bullet & missile damage`,
-      neg: l => `−${l * 25}% bullet & missile fire rate`,
+      pos: l => `+${l * 8}% bullet & missile damage`,
+      neg: l => `−${l * 5}% bullet & missile fire rate`,
       mults: {
-        'turret.damageMul':   l => 1 + l * 0.50,
-        'turret.cooldownMul': l => 1 + l * 0.25,
+        'turret.damageMul':   l => 1 + l * 0.08,
+        'turret.cooldownMul': l => 1 + l * 0.05,
       },
     },
     energy_surplus: {
       label: 'Energy Surplus',
-      pos: l => `+${l * 50}% power plant capacity`,
-      neg: l => `−${l * 30}% power plant regen`,
+      pos: l => `+${l * 8}% power plant capacity`,
+      neg: l => `−${l * 5}% power plant regen`,
       mults: {
-        'power.maxMul':   l => 1 + l * 0.50,
-        'power.regenMul': l => 1 - l * 0.30,
+        'power.maxMul':   l => 1 + l * 0.08,
+        'power.regenMul': l => 1 - l * 0.05,
       },
     },
   },

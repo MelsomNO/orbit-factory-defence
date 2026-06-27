@@ -397,7 +397,7 @@ function effectiveTurretCooldown(t) {
 function effectiveTurretAmmoMax(t) {
   const upg = CONFIG.UPGRADES[t.type] && CONFIG.UPGRADES[t.type].storage;
   const delta = upg && upg.perTier.ammoMax ? upg.perTier.ammoMax * getTier(t, 'storage') : 0;
-  return CONFIG.TURRET_AMMO_MAX + delta + modAdd('turret.ammoMaxAdd');
+  return Math.max(1, Math.round((CONFIG.TURRET_AMMO_MAX + delta) * modMul('turret.ammoMaxMul')));
 }
 
 function effectiveTurretRange(t) {
