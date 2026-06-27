@@ -1,0 +1,41 @@
+# Example nginx config for serving the game + proxying the scoreboard API.
+# The static game is served straight from the repo; /api/ is reverse-proxied to
+# the Node server (run via deploy/orbit-scoreboard.service, listening on
+# 127.0.0.1:3020 by default — set PORT in server/.env to match).
+#
+# Drop this in /etc/nginx/sites-available/ and symlink into sites-enabled/,
+# then `sudo nginx -t && sudo systemctl reload nginx`. TLS lines below are
+# typically added for you by certbot (`certbot --nginx -d your-domain`).
+
+server {
+    server_name your-domain.example.com;
+
+    root /var/www/orbit-factory-defence;
+    index index.html;
+
+    # Scoreboard API → Node server (systemd: orbit-scoreboard.service)
+    location /api/ {
+        proxy_pass http://127.0.0.1:3020;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # Static asset caching
+    location ~* \.(?:ico|css|js|gif|jpe?g|png|webp|svg|woff2?|ttf|eot|mp3|wav|ogg)$ {
+        expires 30d;
+        access_log off;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    listen 443 ssl;          # certbot manages the ssl_certificate lines
+    # ssl_certificate     /etc/letsencrypt/live/your-domain/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/your-domain/privkey.pem;
+}

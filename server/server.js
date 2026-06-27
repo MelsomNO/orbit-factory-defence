@@ -14,6 +14,9 @@ const express = require('express');
 const { pool, ensureSchema } = require('./db');
 
 const PORT = process.env.PORT || 3000;
+// Bind to localhost by default — in production nginx reverse-proxies /api to us,
+// so there's no need to expose the port publicly. Override with HOST=0.0.0.0.
+const HOST = process.env.HOST || '127.0.0.1';
 const ROOT = path.join(__dirname, '..');     // repo root holds index.html
 const MAX_NAME_LEN = 24;
 const LEADERBOARD_LIMIT = 20;
@@ -88,8 +91,8 @@ app.use(express.static(ROOT, { extensions: ['html'] }));
 
 ensureSchema()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`[orbit] scoreboard server listening on http://localhost:${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`[orbit] scoreboard server listening on http://${HOST}:${PORT}`);
     });
   })
   .catch((err) => {

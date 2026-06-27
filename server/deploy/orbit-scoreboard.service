@@ -1,0 +1,14 @@
+[Unit]
+Description=Orbit scoreboard server (Express + Postgres)
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/orbit-factory-defence/server
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

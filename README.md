@@ -143,6 +143,28 @@ committed.
 | `POST` | `/api/scores`  | `{ name, rounds }`    | Record a score (returns its rank) |
 | `GET`  | `/api/health`  | —                     | Liveness probe                    |
 
+### Production deploy
+
+In production the static game is served by nginx and `/api/` is reverse-proxied
+to the Node server (kept alive by systemd). The bits that make that work live in
+[`server/deploy/`](server/deploy):
+
+- `orbit-scoreboard.service` — systemd unit; runs `node server.js` from
+  `server/`, restarts on failure, starts on boot. The server binds to
+  `127.0.0.1` (set `HOST=0.0.0.0` to expose it directly).
+- `nginx-orbit-game.conf.example` — nginx server block: serves the repo and
+  proxies `location /api/` → `http://127.0.0.1:3020`.
+
+```
+sudo cp server/deploy/orbit-scoreboard.service /etc/systemd/system/
+sudo systemctl enable --now orbit-scoreboard
+# add the /api/ proxy block to your nginx site, then:
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Set `PORT` in `server/.env` to whatever the nginx `proxy_pass` points at (3020
+in the example).
+
 > This is a personal-interest project: scores are trusted as submitted, with no
 > anti-cheat. Names are length-capped and HTML-escaped on render; that's it.
 
