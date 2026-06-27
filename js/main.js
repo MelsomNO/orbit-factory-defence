@@ -1,6 +1,22 @@
 // Bootstrap & game loop
 
 (function () {
+  // Sync --vh to the actual visible viewport height. Some mobile browsers
+  // (Vivaldi/Firefox with bottom toolbars) don't update dvh reliably, but
+  // visualViewport.height is always the real visible-area height.
+  function updateVH() {
+    const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    document.documentElement.style.setProperty('--vh', h + 'px');
+    if (typeof Render !== 'undefined' && Render.canvas) Render.resize();
+  }
+  updateVH();
+  window.addEventListener('resize', updateVH);
+  window.addEventListener('orientationchange', updateVH);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateVH);
+    window.visualViewport.addEventListener('scroll', updateVH);
+  }
+
   const canvas = document.getElementById('game-canvas');
   Render.init(canvas);
   generateWorld();

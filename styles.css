@@ -41,8 +41,12 @@ html, body {
 #game-container {
   position: relative;
   width: 100vw;
-  height: 100vh;       /* fallback for older browsers */
-  height: 100dvh;      /* tracks mobile browser chrome (URL bar) so the bottom UI stays on-screen */
+  /* Layered fallbacks: var(--vh) set by JS from visualViewport.height is the
+     most reliable across mobile browsers (handles Vivaldi/Firefox bottom UI),
+     dvh covers modern Chrome/Safari, vh is the legacy fallback. */
+  height: 100vh;
+  height: 100dvh;
+  height: var(--vh, 100dvh);
   overflow: hidden;
 }
 
@@ -99,9 +103,9 @@ html, body {
 .sym-power { color: var(--power); }
 
 #build-menu {
-  /* fixed so the menu is anchored to the visible viewport on mobile browsers
-     where the URL bar dynamically resizes the layout area */
-  position: fixed;
+  /* container is sized to the visible viewport via --vh, so absolute bottom
+     reliably puts the menu at the visible bottom on all mobile browsers */
+  position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
