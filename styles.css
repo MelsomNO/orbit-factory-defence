@@ -41,7 +41,8 @@ html, body {
 #game-container {
   position: relative;
   width: 100vw;
-  height: 100vh;
+  height: 100vh;       /* fallback for older browsers */
+  height: 100dvh;      /* tracks mobile browser chrome (URL bar) so the bottom UI stays on-screen */
   overflow: hidden;
 }
 
@@ -98,7 +99,9 @@ html, body {
 .sym-power { color: var(--power); }
 
 #build-menu {
-  position: absolute;
+  /* fixed so the menu is anchored to the visible viewport on mobile browsers
+     where the URL bar dynamically resizes the layout area */
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
