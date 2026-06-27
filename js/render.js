@@ -927,12 +927,12 @@ const Render = {
   drawBuildPreview() {
     const S = State;
     if (!S.tool) return;
-    // Suppress ghost preview unless the pointer is genuinely on the canvas with valid coords.
     if (!S.pointer.overCanvas) return;
-    if (!Number.isFinite(S.pointer.wx) || !Number.isFinite(S.pointer.wy)) return;
-    if (S.tool === 'demolish') { this.drawDemolishHover(); return; }
     const ctx = this.ctx;
     const t = this.tile();
+    // Conveyor drag uses its own start/current coords, so render it BEFORE the
+    // pointer-finite check (a touch tap-down can hand off valid drag coords
+    // even before the next pointermove updates pointer.wx/wy).
     if (S.tool === 'conveyor' && S.conveyorDrag) {
       const plan = planConveyorPlacement(buildConveyorPath(
         S.conveyorDrag.startX, S.conveyorDrag.startY,
@@ -961,7 +961,12 @@ const Render = {
         ctx.stroke();
         ctx.restore();
       }
-    } else if (S.tool !== 'conveyor') {
+      return;
+    }
+    // Below paths (demolish hover, single-tile build preview) read pointer.wx/wy
+    if (!Number.isFinite(S.pointer.wx) || !Number.isFinite(S.pointer.wy)) return;
+    if (S.tool === 'demolish') { this.drawDemolishHover(); return; }
+    if (S.tool !== 'conveyor') {
       // single tile preview at pointer location
       const tx = Math.floor(S.pointer.wx);
       const ty = Math.floor(S.pointer.wy);

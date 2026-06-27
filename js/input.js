@@ -275,15 +275,18 @@ const Input = {
     if (this.pinch) { this.updatePinch(); return; }
     // Mouse pan update
     if (this.mousePan) { this.updateMousePan(e); return; }
-    // Only the pointer that started the game action drives game-action move
-    if (!this.gameActionActive || e.pointerId !== this.gameActionPointerId) return;
 
+    // Always update the pointer's world position so the hover preview tracks
+    // desktop mouse movement even when no button is held.
     const w = this.toWorld(e);
     const S = State;
     S.pointer.wx = w.x; S.pointer.wy = w.y;
     const rect = this.canvas.getBoundingClientRect();
     S.pointer.x = e.clientX - rect.left;
     S.pointer.y = e.clientY - rect.top;
+
+    // Only the active game-action pointer drives drag updates
+    if (!this.gameActionActive || e.pointerId !== this.gameActionPointerId) return;
     if (S.pointer.draggingPickup) {
       S.pointer.draggingPickup.x = w.x;
       S.pointer.draggingPickup.y = w.y;
