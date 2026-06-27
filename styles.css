@@ -103,10 +103,13 @@ html, body {
 .sym-power { color: var(--power); }
 
 #build-menu {
-  /* container is sized to the visible viewport via --vh, so absolute bottom
-     reliably puts the menu at the visible bottom on all mobile browsers */
-  position: absolute;
-  bottom: 0;
+  /* Fixed to the viewport so it tracks the visible area even when the
+     container size lags behind dynamic browser UI changes. The actual
+     `bottom` offset is updated by JS via --menu-bottom-offset to push
+     the menu up past any browser UI that overlays the bottom (e.g.
+     Vivaldi's bottom address bar / tab strip). */
+  position: fixed;
+  bottom: var(--menu-bottom-offset, 0px);
   left: 0;
   right: 0;
   display: flex;
@@ -114,7 +117,7 @@ html, body {
   gap: 3px;
   padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
   background: linear-gradient(0deg, rgba(8,8,15,0.95) 0%, rgba(8,8,15,0) 100%);
-  z-index: 10;
+  z-index: 50;
   flex-wrap: wrap;
 }
 

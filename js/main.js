@@ -1,12 +1,25 @@
 // Bootstrap & game loop
 
 (function () {
-  // Sync --vh to the actual visible viewport height. Some mobile browsers
-  // (Vivaldi/Firefox with bottom toolbars) don't update dvh reliably, but
-  // visualViewport.height is always the real visible-area height.
+  // Sync --vh to the actual visible viewport height and compute a bottom-offset
+  // for the fixed build menu so it always sits inside the visible area even
+  // when a mobile browser overlays content with its own bottom UI bar.
   function updateVH() {
-    const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-    document.documentElement.style.setProperty('--vh', h + 'px');
+    const vv = window.visualViewport;
+    const vh = (vv && vv.height) || window.innerHeight;
+    const docEl = document.documentElement;
+    docEl.style.setProperty('--vh', vh + 'px');
+    // visualViewport.offsetTop > 0 → soft keyboard or top inset is pushing
+    // content; the gap from viewport-bottom to layout-bottom is the bottom UI
+    // overlay we need to clear.
+    let menuOffset = 0;
+    if (vv) {
+      menuOffset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
+    }
+    // Vivaldi mobile's bottom address bar / tab strip doesn't subtract from
+    // visualViewport, so reserve a sensible minimum offset there.
+    if (menuOffset < 56 && /Vivaldi/i.test(navigator.userAgent)) menuOffset = 56;
+    docEl.style.setProperty('--menu-bottom-offset', menuOffset + 'px');
     if (typeof Render !== 'undefined' && Render.canvas) Render.resize();
   }
   updateVH();
@@ -16,6 +29,10 @@
     window.visualViewport.addEventListener('resize', updateVH);
     window.visualViewport.addEventListener('scroll', updateVH);
   }
+  // Some mobile browsers don't fire resize when their UI animates; poll briefly
+  // after focus / load to catch the final layout.
+  window.addEventListener('load', () => setTimeout(updateVH, 200));
+  setTimeout(updateVH, 1000);
 
   const canvas = document.getElementById('game-canvas');
   Render.init(canvas);
