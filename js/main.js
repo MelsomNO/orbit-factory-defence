@@ -16,23 +16,6 @@
     if (menuOffset < 56 && /Vivaldi/i.test(navigator.userAgent)) menuOffset = 56;
     docEl.style.setProperty('--menu-bottom-offset', menuOffset + 'px');
     if (typeof Render !== 'undefined' && Render.canvas) Render.resize();
-    updateDebug();
-  }
-  function updateDebug() {
-    const el = document.getElementById('debug-overlay');
-    if (!el) return;
-    const vv = window.visualViewport;
-    const menu = document.getElementById('build-menu');
-    const r = menu ? menu.getBoundingClientRect() : null;
-    const docEl = document.documentElement;
-    const parts = [];
-    parts.push(`iH:${window.innerHeight}`);
-    if (vv) parts.push(`vv:${Math.round(vv.width)}x${Math.round(vv.height)}@${Math.round(vv.offsetTop)}`);
-    parts.push(`mo:${docEl.style.getPropertyValue('--menu-bottom-offset') || '?'}`);
-    if (r) parts.push(`menu:${Math.round(r.top)}-${Math.round(r.bottom)} ${r.height > 0 ? 'H'+Math.round(r.height) : 'h0'}`);
-    parts.push(`viv:${/Vivaldi/i.test(navigator.userAgent)?'Y':'N'}`);
-    parts.push(`dpr:${window.devicePixelRatio}`);
-    el.textContent = parts.join(' | ');
   }
   updateVH();
   window.addEventListener('resize', updateVH);
@@ -43,8 +26,6 @@
   }
   window.addEventListener('load', () => setTimeout(updateVH, 200));
   setTimeout(updateVH, 1000);
-  // Continuous debug refresh — picks up changes that don't fire any event
-  setInterval(updateDebug, 500);
 
   const canvas = document.getElementById('game-canvas');
   Render.init(canvas);
