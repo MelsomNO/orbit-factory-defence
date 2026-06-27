@@ -269,6 +269,63 @@ function findOutputConveyor(x, y) {
   return null;
 }
 
+// ---------- MODIFIERS (roguelike per-wave perks) ----------
+// Multiplicative aggregator: multiply contributions from every active modifier
+// for a given stat-key (e.g. 'enemy.hpMul'). Returns 1 when no modifier touches it.
+function modMul(statKey) {
+  let mul = 1;
+  const mods = State.modifiers;
+  if (!mods) return mul;
+  for (const id in mods) {
+    const lvl = mods[id];
+    if (!lvl) continue;
+    const def = CONFIG.MODIFIERS[id];
+    if (def && def.mults && typeof def.mults[statKey] === 'function') {
+      mul *= def.mults[statKey](lvl);
+    }
+  }
+  return mul;
+}
+// Additive aggregator for stats that should add, not scale (e.g. ammo capacity).
+function modAdd(statKey) {
+  let sum = 0;
+  const mods = State.modifiers;
+  if (!mods) return sum;
+  for (const id in mods) {
+    const lvl = mods[id];
+    if (!lvl) continue;
+    const def = CONFIG.MODIFIERS[id];
+    if (def && def.mults && typeof def.mults[statKey] === 'function') {
+      sum += def.mults[statKey](lvl);
+    }
+  }
+  return sum;
+}
+
+// Apply a chosen modifier: bump its level, fire one-shot effect if any.
+function applyModifier(id) {
+  const def = CONFIG.MODIFIERS[id];
+  if (!def) return;
+  const prev = State.modifiers[id] || 0;
+  State.modifiers[id] = prev + 1;
+  if (typeof def.onApply === 'function') def.onApply(prev);
+}
+
+// Choose two distinct random modifiers, pause the game, and stash them in
+// State.modifierPick for the UI to render. UI clears modifierPick + unpauses
+// once the player chooses (or skips).
+function triggerModifierPick() {
+  const ids = Object.keys(CONFIG.MODIFIERS);
+  // Fisher–Yates shuffle
+  for (let i = ids.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+  }
+  const picks = ids.slice(0, Math.min(CONFIG.MODIFIERS_PER_PICK || 2, ids.length));
+  State.modifierPick = picks;
+  State.paused = true;
+}
+
 // ---------- UPGRADES ----------
 
 function upgradeKey(b) {
@@ -309,7 +366,9 @@ function effectiveRecipeTime(b) {
   const recipe = (b === State.hq) ? CONFIG.HQ_RECIPE : CONFIG.FACTORIES[b.type];
   const def = CONFIG.UPGRADES[upgradeKey(b)] && CONFIG.UPGRADES[upgradeKey(b)].speed;
   const delta = def && def.perTier.time ? def.perTier.time * getTier(b, 'speed') : 0;
-  return Math.max(0.2, recipe.time + delta);
+  let val = recipe.time + delta;
+  val *= modMul(b === State.hq ? 'hq.timeMul' : 'factory.timeMul');
+  return Math.max(0.2, val);
 }
 
 function effectiveBufferMax(b, key /* 'inputBufferMax' | 'outputBufferMax' */) {
@@ -319,29 +378,45 @@ function effectiveBufferMax(b, key /* 'inputBufferMax' | 'outputBufferMax' */) {
   return (recipe[key] || 0) + delta;
 }
 
+// Effective output amount per cycle (modifiers can scale plant output).
+function effectiveFactoryOutput(f) {
+  const recipe = CONFIG.FACTORIES[f.type];
+  if (!recipe || !recipe.outputAmount) return 0;
+  return Math.max(1, Math.round(recipe.outputAmount * modMul('factory.outputMul')));
+}
+
 function effectiveTurretCooldown(t) {
   const def = CONFIG.TURRETS[t.type];
   const upg = CONFIG.UPGRADES[t.type] && CONFIG.UPGRADES[t.type].speed;
   const delta = upg && upg.perTier.cooldown ? upg.perTier.cooldown * getTier(t, 'speed') : 0;
-  return Math.max(0.05, def.cooldown + delta);
+  let cd = def.cooldown + delta;
+  cd *= modMul('turret.cooldownMul');
+  return Math.max(0.05, cd);
 }
 
 function effectiveTurretAmmoMax(t) {
   const upg = CONFIG.UPGRADES[t.type] && CONFIG.UPGRADES[t.type].storage;
   const delta = upg && upg.perTier.ammoMax ? upg.perTier.ammoMax * getTier(t, 'storage') : 0;
-  return CONFIG.TURRET_AMMO_MAX + delta;
+  return CONFIG.TURRET_AMMO_MAX + delta + modAdd('turret.ammoMaxAdd');
 }
 
 function effectiveTurretRange(t) {
   const def = CONFIG.TURRETS[t.type];
   const upg = CONFIG.UPGRADES[t.type] && CONFIG.UPGRADES[t.type].storage;
   const delta = upg && upg.perTier.range ? upg.perTier.range * getTier(t, 'storage') : 0;
-  return def.range + delta;
+  return (def.range + delta) * modMul('turret.rangeMul');
+}
+
+function effectiveTurretDamage(t) {
+  const def = CONFIG.TURRETS[t.type];
+  return def.damage * modMul('turret.damageMul');
 }
 
 function effectiveHarvesterRate(h) {
   const upg = CONFIG.UPGRADES.harvester.speed;
-  return Math.max(0.2, CONFIG.HARVESTER.RATE + upg.perTier.rate * getTier(h, 'speed'));
+  let rate = CONFIG.HARVESTER.RATE + upg.perTier.rate * getTier(h, 'speed');
+  rate *= modMul('harvester.rateMul');
+  return Math.max(0.2, rate);
 }
 
 function effectiveHarvesterBuffer(h) {
@@ -349,11 +424,17 @@ function effectiveHarvesterBuffer(h) {
 }
 
 function effectivePowerPlantMax(p) {
-  return CONFIG.FACTORIES.power_plant.output.power_max + CONFIG.UPGRADES.power_plant.storage.perTier.maxPower * getTier(p, 'storage');
+  const base = CONFIG.FACTORIES.power_plant.output.power_max + CONFIG.UPGRADES.power_plant.storage.perTier.maxPower * getTier(p, 'storage');
+  return base * modMul('power.maxMul');
 }
 
 function effectivePowerPlantRegen(p) {
-  return CONFIG.POWER_BASE_REGEN_PER_PLANT + CONFIG.UPGRADES.power_plant.speed.perTier.regen * getTier(p, 'speed');
+  const base = CONFIG.POWER_BASE_REGEN_PER_PLANT + CONFIG.UPGRADES.power_plant.speed.perTier.regen * getTier(p, 'speed');
+  return base * modMul('power.regenMul');
+}
+
+function effectiveConveyorSpeed() {
+  return CONFIG.CONVEYOR.SPEED * modMul('conveyor.speedMul');
 }
 
 function recomputePowerMax() {
@@ -452,7 +533,7 @@ function deliverToBuilding(b, itemType, fromX, fromY) {
 
 function updateConveyors(dt) {
   const S = State;
-  const speed = CONFIG.CONVEYOR.SPEED;
+  const speed = effectiveConveyorSpeed();
   // Phase 1: advance progress once
   for (const c of S.conveyors) {
     if (c.item) c.item.progress = Math.min(1, c.item.progress + speed * dt);
@@ -549,7 +630,8 @@ function updateFactories(dt) {
       } else {
         f.progress -= dt;
         if (f.progress <= 0) {
-          f.outputBuffer = Math.min(outMax, f.outputBuffer + r.outputAmount);
+          const out = effectiveFactoryOutput(f);
+          f.outputBuffer = Math.min(outMax, f.outputBuffer + out);
           f.working = false;
           f.progress = 0;
         }
@@ -625,7 +707,7 @@ function updateTurrets(dt) {
     if (def.continuous) {
       if (nearest && S.power.stored >= def.ammoCost * dt) {
         S.power.stored -= def.ammoCost * dt;
-        nearest.hp -= def.damage * dt;
+        nearest.hp -= effectiveTurretDamage(t) * dt;
         t.firing = true;
         // Throttled laser buzz so the sound stays continuous-feeling but doesn't stack
         const nowSec = performance.now() / 1000;
@@ -651,7 +733,7 @@ function updateTurrets(dt) {
           y: ty + Math.sin(angle) * 0.4,
           vx: Math.cos(angle) * def.projectileSpeed,
           vy: Math.sin(angle) * def.projectileSpeed,
-          damage: def.damage,
+          damage: effectiveTurretDamage(t),
           life: 3.0,
           color: def.projectileColor,
           target: def.homing ? nearest : null,
@@ -723,8 +805,9 @@ function killEnemy(e) {
   e._dead = true;
   const def = CONFIG.ENEMIES[e.type] || CONFIG.ENEMIES.grunt;
   spawnParticles(e.x, e.y, def.color, 12, 3);
-  State.inventory.ore = (State.inventory.ore || 0) + def.reward;
-  addFloater(e.x, e.y - 0.3, `+${def.reward}◆`, CONFIG.COLORS.node);
+  const reward = Math.max(1, Math.round(def.reward * modMul('enemy.rewardMul')));
+  State.inventory.ore = (State.inventory.ore || 0) + reward;
+  addFloater(e.x, e.y - 0.3, `+${reward}◆`, CONFIG.COLORS.node);
   Sound.enemyKilled();
 }
 
@@ -797,7 +880,9 @@ function updatePickups(dt) {
 function startWave() {
   const S = State;
   S.wavePhase = 'active';
-  S.enemiesRemainingToSpawn = CONFIG.WAVE.BASE_ENEMIES + (S.round - 1) * CONFIG.WAVE.ENEMIES_PER_ROUND;
+  let count = CONFIG.WAVE.BASE_ENEMIES + (S.round - 1) * CONFIG.WAVE.ENEMIES_PER_ROUND;
+  count = Math.max(1, Math.round(count * modMul('wave.enemyCountMul')));
+  S.enemiesRemainingToSpawn = count;
   S.spawnTimer = 0;
   Sound.waveStart();
 }
@@ -824,8 +909,8 @@ function spawnEnemy() {
   const def = CONFIG.ENEMIES[typeId];
   const baseHp = CONFIG.WAVE.BASE_HP + (S.round - 1) * CONFIG.WAVE.HP_PER_ROUND;
   const baseSpeed = CONFIG.WAVE.BASE_SPEED + (S.round - 1) * CONFIG.WAVE.SPEED_PER_ROUND;
-  const hp = baseHp * def.hpMul;
-  const speed = baseSpeed * def.speedMul;
+  const hp = baseHp * def.hpMul * modMul('enemy.hpMul');
+  const speed = baseSpeed * def.speedMul * modMul('enemy.speedMul');
   const size = CONFIG.WAVE.ENEMY_SIZE * def.sizeMul;
   const angle = Math.random() * Math.PI * 2;
   const r = S.mapRadius;
@@ -860,7 +945,6 @@ function updateWaves(dt) {
       expandMap();
       S.wavePhase = 'between';
       S.waveTimer = CONFIG.WAVE.BETWEEN_TIME;
-      // Small HQ heal between waves so a careful player can sustain occasional leakers
       const healAmt = Math.min(CONFIG.WAVE.HQ_HEAL_PER_WAVE, S.hq.maxHp - S.hq.hp);
       if (healAmt > 0) {
         S.hq.hp += healAmt;
@@ -868,6 +952,8 @@ function updateWaves(dt) {
       }
       addFloater(S.hq.x + S.hq.size / 2, S.hq.y - 0.5, `WAVE CLEAR`, CONFIG.COLORS.valid);
       Sound.waveClear();
+      // Offer the player two random modifiers and pause the game until they choose
+      triggerModifierPick();
     }
   }
 }

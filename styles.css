@@ -370,6 +370,105 @@ html, body {
 .hud-btn:active { transform: scale(0.96); }
 .hud-btn.paused { color: var(--ok); border-color: var(--ok); }
 
+#mod-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 15, 0.82);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  pointer-events: auto;
+}
+#mod-overlay[hidden] { display: none; }
+.mod-modal {
+  background: var(--panel);
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 22px 24px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: center;
+  box-shadow: 0 0 32px rgba(90, 247, 255, 0.25);
+}
+.mod-modal h2 {
+  color: var(--accent);
+  letter-spacing: 4px;
+  margin-bottom: 6px;
+}
+.mod-sub {
+  color: var(--text-dim);
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+.mod-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.mod-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 12px;
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.1s, transform 0.05s, background 0.1s;
+}
+.mod-card:hover { border-color: var(--accent); background: var(--panel-light); }
+.mod-card:active { transform: scale(0.98); }
+.mod-card .mod-name {
+  color: var(--accent);
+  font-weight: bold;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mod-card .mod-lvl {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  font-weight: normal;
+}
+.mod-card .mod-pos {
+  color: var(--ok);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.mod-card .mod-neg {
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.35;
+}
+#mod-skip {
+  background: transparent;
+  border: 1px solid var(--text-dim);
+  color: var(--text-dim);
+  padding: 8px 18px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 12px;
+}
+#mod-skip:hover { color: var(--text); border-color: var(--text); }
+@media (max-width: 600px) {
+  .mod-options { grid-template-columns: 1fr; }
+  .mod-modal h2 { font-size: 20px; letter-spacing: 2px; }
+  .mod-modal { padding: 16px 14px; }
+}
+
 #pause-overlay {
   position: absolute;
   inset: 0;

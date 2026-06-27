@@ -162,6 +162,47 @@
     return `Demolish (refund ${Math.floor(cost.ore * 0.5)}◆)`;
   }
 
+  // ─── Modifier picker UI ────────────────────────────────────────────────
+  const modOverlay = document.getElementById('mod-overlay');
+  const modOptions = document.getElementById('mod-options');
+  const modSkip = document.getElementById('mod-skip');
+
+  function closeModifierPicker(applyId) {
+    if (applyId) applyModifier(applyId);
+    State.modifierPick = null;
+    State.paused = false;
+    modOverlay.hidden = true;
+    Input.refreshMuteUI(Sound.enabled); // keep mute icon synced (no-op for state)
+  }
+
+  modSkip.addEventListener('click', () => closeModifierPicker(null));
+  modOptions.addEventListener('click', (e) => {
+    const card = e.target.closest('.mod-card');
+    if (!card) return;
+    closeModifierPicker(card.dataset.mod);
+  });
+
+  let _lastRenderedPick = null;
+  function updateModifierPicker() {
+    const pick = State.modifierPick;
+    if (!pick) { modOverlay.hidden = true; _lastRenderedPick = null; return; }
+    modOverlay.hidden = false;
+    // Only re-render the cards when the pick changes (so hover state isn't reset)
+    if (pick === _lastRenderedPick) return;
+    _lastRenderedPick = pick;
+    modOptions.innerHTML = pick.map(id => {
+      const def = CONFIG.MODIFIERS[id];
+      const cur = State.modifiers[id] || 0;
+      const next = cur + 1;
+      const lvlTxt = cur === 0 ? `Lv ${next} (new)` : `Lv ${cur} → Lv ${next}`;
+      return `<button class="mod-card" data-mod="${id}">
+        <span class="mod-name">${def.label} <span class="mod-lvl">${lvlTxt}</span></span>
+        <span class="mod-pos">+ ${def.pos(next)}</span>
+        <span class="mod-neg">− ${def.neg(next)}</span>
+      </button>`;
+    }).join('');
+  }
+
   function updateInfoPanel() {
     const sel = State.selected;
     if (!sel) { ipanel.root.hidden = true; return; }
@@ -193,7 +234,8 @@
       const rate = effectiveHarvesterRate(sel);
       const bufMax = effectiveHarvesterBuffer(sel);
       const reserves = sel.nodeRef ? sel.nodeRef.reserves : 0;
-      const resFrac = reserves / CONFIG.RESOURCE_NODE.CAPACITY;
+      const resMax = (sel.nodeRef && sel.nodeRef.maxReserves) || CONFIG.RESOURCE_NODE.CAPACITY;
+      const resFrac = reserves / resMax;
       const status = reserves <= 0 ? statusBad('depleted') : (sel.buffer >= bufMax ? statusWarn('output full') : statusOK('mining'));
       body =
         row('Rate', `1◆ / ${rate.toFixed(2)}s`) +
@@ -330,6 +372,7 @@
     Render.drawFrame();
     updateHUD();
     updateInfoPanel();
+    updateModifierPicker();
 
     requestAnimationFrame(loop);
   }

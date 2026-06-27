@@ -79,6 +79,122 @@ const CONFIG = {
   },
   POWER_BASE_REGEN_PER_PLANT: 4,
 
+  // ─── Modifications ────────────────────────────────────────────────────────
+  // Roguelike-style permanent perks chosen after each wave clear.
+  // Every modifier always has one positive AND one negative trait, both scale
+  // per level, and the player can stack the same modifier across multiple
+  // rounds. `mults` map stat-keys (read by modMul in entities.js) to a
+  // per-level effect: numbers are simply multiplied (1.5 = +50% per level).
+  // `onApply` runs once at selection for one-shot effects (e.g. heal HQ).
+  MODIFIERS_PER_PICK: 2,
+  MODIFIERS: {
+    rich_veins: {
+      label: 'Rich Veins',
+      pos: l => `+${l * 100}% node ore & capacity`,
+      neg: l => `−${l * 25}% harvest rate`,
+      mults: {
+        'node.capacityMul':  l => 1 + l,                 // future nodes
+        'harvester.rateMul': l => 1 + l * 0.25,          // bigger period = slower
+      },
+      onApply(prevLvl) {
+        // Retroactively boost existing nodes' max + remaining reserves
+        for (const n of State.resourceNodes) {
+          const base = n.maxReserves || CONFIG.RESOURCE_NODE.CAPACITY;
+          const newMax = CONFIG.RESOURCE_NODE.CAPACITY * (1 + (prevLvl + 1));
+          // Top up by the increment so already-depleted nodes don't refill, but capacity rises
+          const inc = newMax - base;
+          n.maxReserves = newMax;
+          n.reserves = Math.min(newMax, n.reserves + inc);
+        }
+      },
+    },
+    reinforced_hull: {
+      label: 'Reinforced Hull',
+      pos: l => `+${l * 30} max HQ HP (heals to full)`,
+      neg: l => `−${l * 15}% all production speed`,
+      mults: {
+        'hq.timeMul':      l => 1 + l * 0.15,
+        'factory.timeMul': l => 1 + l * 0.15,
+      },
+      onApply() {
+        State.hq.maxHp += 30;
+        State.hq.hp = State.hq.maxHp;
+      },
+    },
+    wider_patrol: {
+      label: 'Wider Patrol',
+      pos: l => `+${l * 25}% turret range`,
+      neg: l => `−${l * 20}% turret fire rate`,
+      mults: {
+        'turret.rangeMul':    l => 1 + l * 0.25,
+        'turret.cooldownMul': l => 1 + l * 0.20,
+      },
+    },
+    munitions_surge: {
+      label: 'Munitions Surge',
+      pos: l => `+${l * 5} turret ammo capacity`,
+      neg: l => `−${l * 15}% turret damage`,
+      mults: {
+        'turret.ammoMaxAdd': l => l * 5,
+        'turret.damageMul':  l => 1 - l * 0.15,
+      },
+    },
+    overclocked_plants: {
+      label: 'Overclocked Plants',
+      pos: l => `+${l * 50}% plant output amount`,
+      neg: l => `+${l * 30}% plant cycle time`,
+      mults: {
+        'factory.outputMul': l => 1 + l * 0.50,
+        'factory.timeMul':   l => 1 + l * 0.30,
+      },
+    },
+    quick_belts: {
+      label: 'Quick Belts',
+      pos: l => `+${l * 40}% conveyor speed`,
+      neg: l => `−${l * 20}% harvester rate`,
+      mults: {
+        'conveyor.speedMul': l => 1 + l * 0.40,
+        'harvester.rateMul': l => 1 + l * 0.20,
+      },
+    },
+    tough_enemies: {
+      label: 'Tough Enemies',
+      pos: l => `+${l * 60}% ore from kills`,
+      neg: l => `+${l * 40}% enemy HP`,
+      mults: {
+        'enemy.rewardMul': l => 1 + l * 0.60,
+        'enemy.hpMul':     l => 1 + l * 0.40,
+      },
+    },
+    swarm_tactics: {
+      label: 'Swarm Tactics',
+      pos: l => `−${l * 20}% enemy HP`,
+      neg: l => `+${l * 30}% enemies per wave`,
+      mults: {
+        'enemy.hpMul':         l => 1 - l * 0.20,
+        'wave.enemyCountMul':  l => 1 + l * 0.30,
+      },
+    },
+    heavy_ammo: {
+      label: 'Heavy Ammo',
+      pos: l => `+${l * 50}% bullet & missile damage`,
+      neg: l => `−${l * 25}% bullet & missile fire rate`,
+      mults: {
+        'turret.damageMul':   l => 1 + l * 0.50,
+        'turret.cooldownMul': l => 1 + l * 0.25,
+      },
+    },
+    energy_surplus: {
+      label: 'Energy Surplus',
+      pos: l => `+${l * 50}% power plant capacity`,
+      neg: l => `−${l * 30}% power plant regen`,
+      mults: {
+        'power.maxMul':   l => 1 + l * 0.50,
+        'power.regenMul': l => 1 - l * 0.30,
+      },
+    },
+  },
+
   HARVESTER: {
     RATE: 1.2,                 // seconds per ore produced
     BUFFER: 4,                 // how many ore can sit on harvester before blocking

@@ -32,6 +32,8 @@ function generateWorld() {
   S.gameOver = false;
   S.paused = false;
   S.camera.manual = false;
+  S.modifiers = {};
+  S.modifierPick = null;
 
   spawnInitialNodes(CONFIG.RESOURCE_NODE.INITIAL);
   for (let i = 0; i < CONFIG.OBSTACLE.INITIAL; i++) addRandomObstacle();
@@ -91,7 +93,8 @@ function addRandomResourceNode() {
       if (Math.sqrt(dx * dx + dy * dy) < CONFIG.RESOURCE_NODE.MIN_DIST_FROM_NODE) { tooClose = true; break; }
     }
     if (tooClose) continue;
-    S.resourceNodes.push({ x, y, reserves: CONFIG.RESOURCE_NODE.CAPACITY });
+    const cap = CONFIG.RESOURCE_NODE.CAPACITY * (typeof modMul === 'function' ? modMul('node.capacityMul') : 1);
+    S.resourceNodes.push({ x, y, reserves: cap, maxReserves: cap });
     Grid.setKey(x, y, 'node');
     return true;
   }

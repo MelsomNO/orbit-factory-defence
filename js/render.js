@@ -249,7 +249,7 @@ const Render = {
       ctx.fill();
       ctx.globalAlpha = 1;
       // reserve indicator below
-      const frac = n.reserves / CONFIG.RESOURCE_NODE.CAPACITY;
+      const frac = n.reserves / (n.maxReserves || CONFIG.RESOURCE_NODE.CAPACITY);
       ctx.fillStyle = 'rgba(0,0,0,0.5)';
       ctx.fillRect(p.x - sz, p.y + sz + 2, sz * 2, 2);
       ctx.fillStyle = CONFIG.COLORS.node;

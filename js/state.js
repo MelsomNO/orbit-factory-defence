@@ -43,6 +43,13 @@ const State = {
   // Flags
   gameOver: false,
   paused: false,
+
+  // Roguelike modifier system — { modifierId: tierLevel }. Each level stacks.
+  // Effects are read on-the-fly by modMul / modAdd in entities.js.
+  modifiers: {},
+  // Pending modifier picker — set when a wave clears; contains the two chosen
+  // ids. UI shows the modal; selection clears this and resumes the game.
+  modifierPick: null,
 };
 
 // Build a grid lookup that maps "x,y" → building/conveyor for fast tile checks.
