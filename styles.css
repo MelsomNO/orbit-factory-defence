@@ -454,7 +454,15 @@ html, body {
 @media (max-width: 600px) {
   .hud-section .label { display: none; }
   /* Bigger tap targets for HUD buttons (compound selector beats .hud-section padding) */
-  .hud-btn.hud-section { font-size: 20px; padding: 8px 12px; }
+  .hud-btn.hud-section { font-size: 20px; padding: 6px 10px; }
+
+  #top-hud { padding: 4px 4px; gap: 4px; }
+  /* Status chips: compact text so all 4 fit in one row alongside the buttons */
+  .hud-section:not(.hud-btn) { padding: 3px 6px; font-size: 12px; line-height: 1.3; }
+  .hud-section.inventory { gap: 8px; }
+  .inv-item { gap: 3px; }
+  #hq-hp-display.low { color: var(--warning); }
+  #hq-hp-display.crit { color: var(--danger); font-weight: bold; }
 
   #build-menu {
     gap: 5px;

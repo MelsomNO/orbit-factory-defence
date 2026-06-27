@@ -63,7 +63,14 @@
     els.waveTimer.textContent = (S.wavePhase === 'active')
       ? `${S.enemiesRemainingToSpawn + S.enemies.length}🛸`
       : `${Math.max(0, Math.ceil(S.waveTimer))}s`;
-    els.hqHp.textContent = S.hq ? `${Math.max(0, Math.ceil(S.hq.hp))}/${S.hq.maxHp}` : '0';
+    if (S.hq) {
+      els.hqHp.textContent = `${Math.max(0, Math.ceil(S.hq.hp))}/${S.hq.maxHp}`;
+      const frac = S.hq.hp / S.hq.maxHp;
+      els.hqHp.classList.toggle('crit', frac <= 0.25);
+      els.hqHp.classList.toggle('low', frac > 0.25 && frac <= 0.5);
+    } else {
+      els.hqHp.textContent = '0';
+    }
     els.invOre.textContent = Math.floor(S.inventory.ore || 0);
     els.invPlate.textContent = `${Math.floor(S.hq ? S.hq.plateBuffer || 0 : 0)}/${CONFIG.HQ_RECIPE.outputBufferMax}`;
     els.invPower.textContent = Math.floor(S.power.stored);
