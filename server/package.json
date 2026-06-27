@@ -1,0 +1,20 @@
+{
+  "name": "orbit-scoreboard-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tiny Express + Postgres backend for the Orbit scoreboard, plus static hosting of the game.",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "init-db": "node init-db.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  }
+}

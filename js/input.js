@@ -83,11 +83,8 @@ const Input = {
       }
     });
 
-    document.getElementById('restart-btn').addEventListener('click', () => {
-      generateWorld();
-      Input.togglePause(false);
-      document.getElementById('game-over').hidden = true;
-    });
+    // The Restart / Play Again button and the score form are wired up in
+    // js/scoreboard.js (Scoreboard.init), so the game-over flow lives in one place.
 
     document.getElementById('intro-close').addEventListener('click', () => {
       document.getElementById('intro').hidden = true;

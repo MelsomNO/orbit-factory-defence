@@ -31,6 +31,7 @@
   Render.init(canvas);
   generateWorld();
   Input.init(canvas);
+  Scoreboard.init();
 
   // Show intro on first launch (versioned key so updates re-show)
   const INTRO_KEY = 'orbit-intro-seen-v3';
@@ -90,8 +91,10 @@
     if (S.gameOver) {
       els.gameOver.hidden = false;
       els.roundsSurvived.textContent = S.round;
+      Scoreboard.notifyGameOver(S.round);
     } else {
       els.gameOver.hidden = true;
+      Scoreboard.reset();
     }
   }
 

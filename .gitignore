@@ -16,3 +16,7 @@ npm-debug.log*
 # Local builds (none currently, but future-proofing)
 dist/
 node_modules/
+
+# Scoreboard server — local secrets & deps
+server/.env
+.env

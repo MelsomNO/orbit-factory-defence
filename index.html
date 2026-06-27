@@ -129,7 +129,24 @@
     <div id="game-over" hidden>
       <h1>HQ DESTROYED</h1>
       <p>You survived <span id="rounds-survived">0</span> rounds</p>
-      <button id="restart-btn">Restart</button>
+
+      <form id="score-form" autocomplete="off">
+        <p class="score-prompt">Add your name to the scoreboard:</p>
+        <input id="score-name" type="text" maxlength="24" placeholder="Your name" aria-label="Your name" />
+        <div class="score-actions">
+          <button type="submit" id="save-score-btn">Save Score</button>
+          <button type="button" id="skip-score-btn">Skip</button>
+        </div>
+      </form>
+
+      <p id="score-msg" class="score-msg" hidden></p>
+
+      <div id="leaderboard" hidden>
+        <h2>Leaderboard</h2>
+        <ol id="leaderboard-list"></ol>
+      </div>
+
+      <button id="restart-btn" hidden>Play Again</button>
     </div>
 
     <div id="intro" hidden>
@@ -147,13 +164,14 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=13"></script>
-  <script src="js/state.js?v=13"></script>
-  <script src="js/world.js?v=13"></script>
-  <script src="js/sound.js?v=13"></script>
-  <script src="js/entities.js?v=13"></script>
-  <script src="js/render.js?v=13"></script>
-  <script src="js/input.js?v=13"></script>
-  <script src="js/main.js?v=13"></script>
+  <script src="js/config.js?v=14"></script>
+  <script src="js/state.js?v=14"></script>
+  <script src="js/world.js?v=14"></script>
+  <script src="js/sound.js?v=14"></script>
+  <script src="js/entities.js?v=14"></script>
+  <script src="js/render.js?v=14"></script>
+  <script src="js/input.js?v=14"></script>
+  <script src="js/scoreboard.js?v=14"></script>
+  <script src="js/main.js?v=14"></script>
 </body>
 </html>

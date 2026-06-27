@@ -106,10 +106,50 @@ You'll need to route conveyors around them.
 - **No build tooling** — `index.html` loads vanilla JS files in dependency order
 - All gameplay constants live in `js/config.js` for easy tuning
 
+## Scoreboard (optional backend)
+
+When your HQ is destroyed you can enter a name to save how many rounds you
+survived to a shared leaderboard. This needs the little Node + Postgres server
+in [`server/`](server). **It's entirely optional** — open `index.html` with no
+server and the game plays exactly as before; the game-over screen just shows
+**Play Again** instead of the name form (it detects the backend is missing and
+degrades gracefully).
+
+### Run it
+
+```
+# 1. Postgres: create a dedicated role + database
+createuser orbit_game --pwprompt          # choose any password
+createdb -O orbit_game orbit_game
+
+# 2. Configure the server
+cd server
+cp .env.example .env                       # then edit DATABASE_URL with your password
+npm install
+
+# 3. Start it (creates the `scores` table on first boot)
+npm start                                  # → http://localhost:3000
+```
+
+Now play at `http://localhost:3000` (served by the same process) and your
+scores persist. `server/.env` is gitignored so your credentials never get
+committed.
+
+### API
+
+| Method | Route          | Body                  | Description                       |
+| ------ | -------------- | --------------------- | --------------------------------- |
+| `GET`  | `/api/scores`  | —                     | Top 20 scores, highest rounds first |
+| `POST` | `/api/scores`  | `{ name, rounds }`    | Record a score (returns its rank) |
+| `GET`  | `/api/health`  | —                     | Liveness probe                    |
+
+> This is a personal-interest project: scores are trusted as submitted, with no
+> anti-cheat. Names are length-capped and HTML-escaped on render; that's it.
+
 ## File layout
 
 ```
-index.html           HUD, intro modal, info panel
+index.html           HUD, intro modal, info panel, game-over + scoreboard
 styles.css           layout + responsive HUD
 js/config.js         balance numbers, costs, recipes, enemy & upgrade defs
 js/state.js          singleton State + Grid lookup
@@ -118,7 +158,9 @@ js/sound.js          procedural sound effects
 js/entities.js       placement, factory/conveyor/turret/enemy tick logic
 js/render.js         all canvas drawing
 js/input.js          unified pointer (mouse + touch), pan/zoom, hotkeys
+js/scoreboard.js     game-over name entry + leaderboard (talks to /api)
 js/main.js           game loop, HUD updates, info panel, intro
+server/              optional Express + Postgres scoreboard backend
 ```
 
 ## License
