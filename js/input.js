@@ -147,7 +147,7 @@ const Input = {
     const slider = document.getElementById('music-vol-slider');
     const display = document.getElementById('music-vol-display');
     if (!slider || !display) return;
-    const pct = Math.round((Music.volume ?? 0.25) * 100);
+    const pct = Math.round((Music.volume ?? 0.02) * 100);
     slider.value = String(pct);
     display.textContent = pct + '%';
   },

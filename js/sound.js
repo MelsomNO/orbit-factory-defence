@@ -163,8 +163,8 @@ const Sound = {
 // the game still works, the theme just stays silent.
 const Music = {
   el: null,
-  defaultVolume: 0.25,
-  volume: 0.25,
+  defaultVolume: 0.02,
+  volume: 0.02,
   initialized: false,
 
   init() {
