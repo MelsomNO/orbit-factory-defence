@@ -519,6 +519,51 @@ html, body {
   gap: 12px;
 }
 #pause-overlay[hidden] { display: none; }
+.audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(20, 20, 40, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 14px;
+  color: var(--text);
+  font-size: 13px;
+}
+.audio-controls label { color: var(--text-dim); }
+.audio-controls input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 140px;
+  height: 4px;
+  background: var(--panel-light);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.audio-controls input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.audio-controls input[type=range]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.audio-controls #music-vol-display {
+  min-width: 36px;
+  text-align: right;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
 #pause-overlay h2 {
   color: var(--accent);
   font-size: 36px;

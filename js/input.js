@@ -50,9 +50,29 @@ const Input = {
     Input.refreshMuteUI(true); // sync initial UI; will read enabled state once Sound.init runs
 
     // Lazy-init audio on first user gesture (autoplay policy)
-    const initAudio = () => { Sound.init(); Input.refreshMuteUI(Sound.enabled); };
+    const initAudio = () => {
+      Sound.init();
+      Music.init();
+      Music.start();
+      Input.refreshMuteUI(Sound.enabled);
+      Input.refreshMusicUI();
+    };
     window.addEventListener('pointerdown', initAudio, { once: true });
     window.addEventListener('keydown',     initAudio, { once: true });
+
+    // Music volume slider (pause overlay). Reflects stored value on init,
+    // writes back through Music.setVolume which persists to localStorage.
+    const musicSlider = document.getElementById('music-vol-slider');
+    if (musicSlider) {
+      musicSlider.addEventListener('input', () => {
+        const pct = parseInt(musicSlider.value, 10);
+        Music.setVolume(pct / 100);
+        // If user nudges volume above 0, ensure playback actually started
+        // (in case autoplay was blocked on the initial gesture).
+        if (pct > 0) Music.start();
+        Input.refreshMusicUI();
+      });
+    }
 
     // Build the digit→tool lookup from data-hotkey attributes on the build menu buttons
     const hotkeyToTool = {};
@@ -121,6 +141,15 @@ const Input = {
     if (!btn) return;
     btn.textContent = enabled ? '🔊' : '🔇';
     btn.title = enabled ? 'Mute (M)' : 'Unmute (M)';
+  },
+
+  refreshMusicUI() {
+    const slider = document.getElementById('music-vol-slider');
+    const display = document.getElementById('music-vol-display');
+    if (!slider || !display) return;
+    const pct = Math.round((Music.volume ?? 0.25) * 100);
+    slider.value = String(pct);
+    display.textContent = pct + '%';
   },
 
   togglePause(force) {

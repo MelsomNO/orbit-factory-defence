@@ -8,11 +8,15 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Orbit — Tower Factory Defense</title>
-  <link rel="stylesheet" href="styles.css?v=20">
+  <link rel="stylesheet" href="styles.css?v=21">
 </head>
 <body>
   <div id="game-container">
     <canvas id="game-canvas"></canvas>
+
+    <!-- Theme music. File is gitignored and uploaded to the server manually.
+         If missing, audio element silently fails to load — game still works. -->
+    <audio id="theme-audio" src="resources/music/orbit-theme.mp3" preload="auto" loop></audio>
 
     <div id="top-hud">
       <div class="hud-section">
@@ -78,6 +82,11 @@
     <div id="pause-overlay" hidden>
       <h2>PAUSED</h2>
       <p>Press <b>Space</b> or tap Resume</p>
+      <div class="audio-controls">
+        <label for="music-vol-slider">🎵 Music</label>
+        <input id="music-vol-slider" type="range" min="0" max="100" step="1" value="25" />
+        <span id="music-vol-display">25%</span>
+      </div>
       <div id="pause-leaderboard" hidden>
         <h3>Leaderboard</h3>
         <ol id="pause-leaderboard-list"></ol>
@@ -168,14 +177,14 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=20"></script>
-  <script src="js/state.js?v=20"></script>
-  <script src="js/world.js?v=20"></script>
-  <script src="js/sound.js?v=20"></script>
-  <script src="js/entities.js?v=20"></script>
-  <script src="js/render.js?v=20"></script>
-  <script src="js/input.js?v=20"></script>
-  <script src="js/scoreboard.js?v=20"></script>
-  <script src="js/main.js?v=20"></script>
+  <script src="js/config.js?v=21"></script>
+  <script src="js/state.js?v=21"></script>
+  <script src="js/world.js?v=21"></script>
+  <script src="js/sound.js?v=21"></script>
+  <script src="js/entities.js?v=21"></script>
+  <script src="js/render.js?v=21"></script>
+  <script src="js/input.js?v=21"></script>
+  <script src="js/scoreboard.js?v=21"></script>
+  <script src="js/main.js?v=21"></script>
 </body>
 </html>

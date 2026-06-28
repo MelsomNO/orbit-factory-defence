@@ -156,3 +156,51 @@ const Sound = {
     this._noiseBurst(0.45, 0.16, 700);
   },
 };
+
+// Background music — separate from the procedural SFX above so its own volume
+// can be set independently. Audio file lives in /resources/music/ (gitignored,
+// uploaded to the server out-of-band). If the file isn't present the rest of
+// the game still works, the theme just stays silent.
+const Music = {
+  el: null,
+  defaultVolume: 0.25,
+  volume: 0.25,
+  initialized: false,
+
+  init() {
+    if (this.initialized) return;
+    this.initialized = true;
+    this.el = document.getElementById('theme-audio');
+    if (!this.el) return;
+    try {
+      const stored = localStorage.getItem('orbit-music-vol');
+      if (stored != null) {
+        const v = parseFloat(stored);
+        if (!isNaN(v)) this.volume = Math.min(1, Math.max(0, v));
+      }
+    } catch (_) {}
+    this.el.loop = true;
+    this.el.volume = this.volume;
+    // Autoplay policy: only allowed after a user gesture. Caller hooks first
+    // pointer/keydown to call Music.start().
+  },
+
+  start() {
+    if (!this.el) return;
+    // .play() returns a promise that rejects if autoplay is blocked
+    const p = this.el.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+  },
+
+  stop() {
+    if (!this.el) return;
+    this.el.pause();
+  },
+
+  setVolume(v) {
+    this.volume = Math.min(1, Math.max(0, v));
+    if (this.el) this.el.volume = this.volume;
+    try { localStorage.setItem('orbit-music-vol', String(this.volume)); } catch (_) {}
+    return this.volume;
+  },
+};
