@@ -110,10 +110,45 @@ const Sound = {
     this._noiseBurst(0.18, 0.07, 1500);
   },
 
-  // High-pitched buzzing zap for laser (called repeatedly while firing)
-  laserPulse() {
-    this._tone({ freq: 1800, freqEnd: 1500, duration: 0.14, type: 'sawtooth', volume: 0.05, attack: 0.004 });
-    this._tone({ freq: 920,  freqEnd: 820,  duration: 0.14, type: 'sine',     volume: 0.035, attack: 0.004 });
+  // Shared continuous laser hum. Caller passes the count of currently-firing
+  // laser turrets each tick; volume saturates logarithmically so 1 vs 10 vs 50
+  // lasers all sound clean and consistent rather than overlapping into noise.
+  _laser: null,
+  setLaserHum(count) {
+    if (!this.enabled || !this.ctx) return;
+    if (!this._laser) {
+      const ctx = this.ctx;
+      const gain = ctx.createGain();
+      gain.gain.value = 0;
+      gain.connect(this.master);
+      // Two detuned saw oscillators for a slightly thicker beam tone, plus a
+      // soft low-pass so it doesn't get harsh when many turrets fire.
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 2400;
+      filter.Q.value = 0.7;
+      filter.connect(gain);
+      const oscA = ctx.createOscillator(); oscA.type = 'sawtooth'; oscA.frequency.value = 880;
+      const oscB = ctx.createOscillator(); oscB.type = 'sawtooth'; oscB.frequency.value = 884; // tiny detune
+      const oscSub = ctx.createOscillator(); oscSub.type = 'sine'; oscSub.frequency.value = 220;
+      const subGain = ctx.createGain(); subGain.gain.value = 0.4;
+      oscA.connect(filter);
+      oscB.connect(filter);
+      oscSub.connect(subGain).connect(filter);
+      oscA.start(); oscB.start(); oscSub.start();
+      this._laser = { gain, oscA, oscB, oscSub, current: 0 };
+    }
+    const L = this._laser;
+    // Log saturation: 1 -> ~0.18, 4 -> ~0.32, 20 -> ~0.55, large -> ~0.65 cap
+    const target = count > 0 ? Math.min(0.65, 0.12 + Math.log(1 + count) * 0.15) : 0;
+    if (target === L.current) return;
+    L.current = target;
+    const now = this.ctx.currentTime;
+    L.gain.gain.cancelScheduledValues(now);
+    L.gain.gain.setValueAtTime(L.gain.gain.value, now);
+    // Fast attack on start, slightly slower release so cutting fire feels natural.
+    const ramp = target > 0 ? 0.04 : 0.12;
+    L.gain.gain.linearRampToValueAtTime(target, now + ramp);
   },
 
   // Light "tink" — picking ore off a node or grabbing a floating pickup

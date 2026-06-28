@@ -424,6 +424,9 @@
       updateEnemies(dt);
       updatePickups(dt);
       updateParticles(dt);
+    } else if (Sound && Sound.setLaserHum) {
+      // Paused / game over: cut the laser hum so it doesn't keep droning.
+      Sound.setLaserHum(0);
     }
     Render.drawFrame();
     updateHUD();

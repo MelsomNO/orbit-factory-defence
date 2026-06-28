@@ -804,6 +804,7 @@ function convertConveyor(c, newType) {
 
 function updateTurrets(dt) {
   const S = State;
+  let firingLasers = 0;
   for (const t of S.buildings) {
     const def = CONFIG.TURRETS[t.type];
     if (!def) continue;
@@ -824,12 +825,7 @@ function updateTurrets(dt) {
         S.power.stored -= def.ammoCost * dt;
         nearest.hp -= effectiveTurretDamage(t) * dt;
         t.firing = true;
-        // Throttled laser buzz so the sound stays continuous-feeling but doesn't stack
-        const nowSec = performance.now() / 1000;
-        if (!t._soundT || nowSec - t._soundT > 0.13) {
-          Sound.laserPulse();
-          t._soundT = nowSec;
-        }
+        firingLasers++;
         if (nearest.hp <= 0) killEnemy(nearest);
       } else {
         t.firing = false;
@@ -860,6 +856,9 @@ function updateTurrets(dt) {
       }
     }
   }
+  // Single shared laser hum — caller-side accumulation prevents N independent
+  // oscillators from compounding into noise mush at high turret counts.
+  Sound.setLaserHum(firingLasers);
 }
 
 function updateProjectiles(dt) {
