@@ -449,6 +449,53 @@ function recomputePowerMax() {
   State.power.stored = Math.min(State.power.stored, State.power.max);
 }
 
+// Clockwise output rotation for single-tile producers (harvester, plants).
+// Each call starts from the building's current cursor, tries N→E→S→W; on the
+// first successful push the cursor advances past that side so the next item
+// goes to a different conveyor when one is available. Falls back to the next
+// clockwise side immediately if the current one is full or absent, so a single
+// blocked belt never stalls output when others are free.
+const CW_DIRS = ['N', 'E', 'S', 'W'];
+function pushToOutputConveyor(b, itemType) {
+  if (b._outputCursor == null) b._outputCursor = 0;
+  for (let i = 0; i < 4; i++) {
+    const idx = (b._outputCursor + i) % 4;
+    if (tryPushToConveyor(b.x, b.y, CW_DIRS[idx], itemType)) {
+      b._outputCursor = (idx + 1) % 4;
+      return true;
+    }
+  }
+  return false;
+}
+
+// HQ is multi-tile so we walk the perimeter clockwise (top→right→bot→left).
+// For a size N HQ that's 4N candidate slots — each gets its own slot in the
+// rotation, so item distribution stays uniform across every connected belt.
+function hqPerimeterCandidates() {
+  const h = State.hq;
+  const out = [];
+  const s = h.size;
+  for (let dx = 0; dx < s; dx++)        out.push({ x: h.x + dx,     y: h.y,         dir: 'N' });
+  for (let dy = 0; dy < s; dy++)        out.push({ x: h.x + s - 1, y: h.y + dy,    dir: 'E' });
+  for (let dx = s - 1; dx >= 0; dx--)   out.push({ x: h.x + dx,     y: h.y + s - 1, dir: 'S' });
+  for (let dy = s - 1; dy >= 0; dy--)   out.push({ x: h.x,          y: h.y + dy,    dir: 'W' });
+  return out;
+}
+function pushFromHQ(itemType) {
+  const h = State.hq;
+  if (h._outputCursor == null) h._outputCursor = 0;
+  const cands = hqPerimeterCandidates();
+  for (let i = 0; i < cands.length; i++) {
+    const idx = (h._outputCursor + i) % cands.length;
+    const c = cands[idx];
+    if (tryPushToConveyor(c.x, c.y, c.dir, itemType)) {
+      h._outputCursor = (idx + 1) % cands.length;
+      return true;
+    }
+  }
+  return false;
+}
+
 function updateHarvesters(dt) {
   for (const h of State.buildings) {
     if (h.type !== 'harvester') continue;
@@ -462,12 +509,8 @@ function updateHarvesters(dt) {
         reduceNodeReserves(h.nodeRef, 1);
       }
     }
-    if (h.buffer > 0) {
-      const conv = findOutputConveyor(h.x, h.y);
-      if (conv) {
-        conv.item = { type: 'ore', progress: 0 };
-        h.buffer--;
-      }
+    if (h.buffer > 0 && pushToOutputConveyor(h, 'ore')) {
+      h.buffer--;
     }
   }
 }
@@ -582,13 +625,9 @@ function updateHQ(dt) {
   const r = CONFIG.HQ_RECIPE;
   const outputMax = effectiveBufferMax(h, 'outputBufferMax');
   if (h.plateBuffer == null) h.plateBuffer = 0;
-  // Push plate to adjacent conveyor
-  if (h.plateBuffer > 0) {
-    const conv = findOutputConveyorMulti(hqTiles());
-    if (conv) {
-      conv.item = { type: r.output, progress: 0 };
-      h.plateBuffer--;
-    }
+  // Push plate to adjacent conveyor, rotating clockwise around the HQ perimeter
+  if (h.plateBuffer > 0 && pushFromHQ(r.output)) {
+    h.plateBuffer--;
   }
   // Process ore → plate
   if (!h.processing) {
@@ -617,13 +656,9 @@ function updateFactories(dt) {
       if (f.inputBuffer == null) f.inputBuffer = 0;
       if (f.outputBuffer == null) f.outputBuffer = 0;
       const outMax = effectiveBufferMax(f, 'outputBufferMax');
-      // Push output to adjacent conveyor (one per tick)
-      if (f.outputBuffer > 0) {
-        const conv = findOutputConveyor(f.x, f.y);
-        if (conv) {
-          conv.item = { type: r.outputType, progress: 0 };
-          f.outputBuffer--;
-        }
+      // Push output to adjacent conveyor (one per tick), rotating clockwise
+      if (f.outputBuffer > 0 && pushToOutputConveyor(f, r.outputType)) {
+        f.outputBuffer--;
       }
       // Start a process if not working
       if (!f.working) {
