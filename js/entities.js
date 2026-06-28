@@ -41,7 +41,10 @@ function tryPushItem(srcX, srcY, dir, itemType) {
   const c = getConveyorAt(nx, ny);
   if (c) {
     if (c.item) return false;
-    if (c.dir === OPPOSITE[dir]) return false;
+    // Belt must be aimed AWAY from the source so the player explicitly chose
+    // this side as an output. A belt running sideways past the source is
+    // ignored (no accidental side-pickup).
+    if (c.dir !== dir) return false;
     c.item = { type: itemType, progress: 0 };
     return true;
   }
@@ -62,7 +65,7 @@ function tryPushToTransport(srcX, srcY, dir, itemType) {
   const c = getConveyorAt(nx, ny);
   if (c) {
     if (c.item) return false;
-    if (c.dir === OPPOSITE[dir]) return false;
+    if (c.dir !== dir) return false; // belt must flow away from source
     c.item = { type: itemType, progress: 0 };
     return true;
   }
@@ -131,8 +134,14 @@ function getConveyorConnections(c) {
     const adj = getConveyorAt(ax, ay);
     if (adj) { if (adj.dir === OPPOSITE[side]) conn[side] = true; continue; }
     const adjB = getBuildingAt(ax, ay);
-    if (adjB) { if (canBuildingOutputToward(adjB, OPPOSITE[side])) conn[side] = true; continue; }
-    if (isHQTile(ax, ay)) conn[side] = true; // HQ pushes plates out any side
+    if (adjB) {
+      // Building feeds this belt only when (a) it can output toward us and
+      // (b) the belt is aimed away from it (c.dir points opposite of `side`).
+      if (canBuildingOutputToward(adjB, OPPOSITE[side]) && c.dir === OPPOSITE[side]) conn[side] = true;
+      continue;
+    }
+    // HQ pushes plates/ore — same alignment rule
+    if (isHQTile(ax, ay) && c.dir === OPPOSITE[side]) conn[side] = true;
   }
   return conn;
 }
