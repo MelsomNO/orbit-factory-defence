@@ -219,7 +219,23 @@ html, body {
   white-space: nowrap;
 }
 .mod-badge .name { color: var(--accent); font-weight: bold; }
-.mod-badge .lvl { color: var(--ok); letter-spacing: 1px; }
+.mod-badge .lvl { color: var(--ok); letter-spacing: 1px; display: inline-flex; align-items: center; gap: 2px; }
+.mod-badge .lvl > span { line-height: 1; }
+.mod-badge .lvl .t0 { color: var(--ok); font-size: 11px; }
+.mod-badge .lvl .t1 { color: #ffc850; font-size: 14px; text-shadow: 0 0 4px rgba(255,200,80,0.5); }
+.mod-badge .lvl .t2 { color: #ff60c0; font-size: 16px; text-shadow: 0 0 5px rgba(255,96,192,0.6); }
+.mod-badge .lvl .t3 { color: #5af7ff; font-size: 18px; text-shadow: 0 0 6px rgba(90,247,255,0.7); }
+.mod-badge .lvl .t4 { color: #ff4060; font-size: 20px; text-shadow: 0 0 7px rgba(255,64,96,0.75); }
+.mod-badge .lvl .t5 {
+  color: #fff;
+  font-size: 22px;
+  text-shadow: 0 0 4px #ffc850, 0 0 8px #ff60c0, 0 0 12px #5af7ff;
+  animation: tier5-pulse 2s ease-in-out infinite;
+}
+@keyframes tier5-pulse {
+  0%, 100% { filter: hue-rotate(0deg) brightness(1); }
+  50% { filter: hue-rotate(60deg) brightness(1.25); }
+}
 @media (max-width: 600px) {
   #mod-list { top: 76px; }
   .mod-badge { font-size: 10px; padding: 2px 7px; }

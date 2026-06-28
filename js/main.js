@@ -191,6 +191,31 @@
     closeModifierPicker(card.dataset.mod);
   });
 
+  // Render a modifier level as tiered stars: every 5 base stars merge into a
+  // bigger star at the next tier, recursively. So lvl 5 = 1 tier-1 star,
+  // lvl 25 = 1 tier-2 star, lvl 30 = 1 tier-2 + 1 tier-1, lvl 31 = + 1 tier-0,
+  // and so on infinitely.
+  function formatModLevel(lvl) {
+    if (lvl <= 0) return '';
+    const parts = [];
+    let remaining = lvl;
+    // Find the highest tier we need by reducing remaining by powers of 5.
+    let tier = 0;
+    while (Math.pow(5, tier + 1) <= remaining) tier++;
+    while (tier >= 0) {
+      const unit = Math.pow(5, tier);
+      const count = Math.floor(remaining / unit);
+      if (count > 0) {
+        // Display large counts compactly: ★★★★ at most per tier, then ×N
+        const display = count <= 4 ? '★'.repeat(count) : `★×${count}`;
+        parts.push(`<span class="t${Math.min(tier, 5)}">${display}</span>`);
+        remaining -= count * unit;
+      }
+      tier--;
+    }
+    return parts.join('');
+  }
+
   // Active-modifier badge row — re-rendered only when the level map changes
   const modListEl = document.getElementById('mod-list');
   let _lastModSig = '';
@@ -204,7 +229,7 @@
     modListEl.innerHTML = ids.map(id => {
       const def = CONFIG.MODIFIERS[id];
       const lvl = State.modifiers[id];
-      const stars = '★'.repeat(Math.min(lvl, 5)) + (lvl > 5 ? `×${lvl}` : '');
+      const stars = formatModLevel(lvl);
       const tip = `${def.label}  Lv ${lvl}\n+ ${def.pos(lvl)}\n− ${def.neg(lvl)}`;
       return `<div class="mod-badge" title="${tip.replace(/"/g, '&quot;')}">
         <span class="name">${def.label}</span>
