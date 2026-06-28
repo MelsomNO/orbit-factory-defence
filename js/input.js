@@ -130,6 +130,12 @@ const Input = {
     btn.textContent = State.paused ? '▶' : '⏸';
     btn.classList.toggle('paused', State.paused);
     btn.title = State.paused ? 'Resume (Space)' : 'Pause (Space)';
+    // Refresh the pause-screen leaderboard each time the player pauses
+    if (State.paused && typeof Scoreboard !== 'undefined' && Scoreboard.loadInto) {
+      const wrap = document.getElementById('pause-leaderboard');
+      const list = document.getElementById('pause-leaderboard-list');
+      Scoreboard.loadInto(list).then(ok => { if (wrap) wrap.hidden = !ok; });
+    }
   },
 
   setTool(tool) {

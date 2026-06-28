@@ -618,14 +618,14 @@ html, body {
 .score-msg.ok { color: var(--accent); }
 .score-msg.err { color: var(--danger); }
 
-#leaderboard { margin-bottom: 16px; }
-#leaderboard h2 {
+#leaderboard, #pause-leaderboard { margin-bottom: 16px; }
+#leaderboard h2, #pause-leaderboard h3 {
   color: var(--accent);
   font-size: 14px;
   letter-spacing: 2px;
   margin-bottom: 8px;
 }
-#leaderboard-list {
+#leaderboard-list, #pause-leaderboard-list {
   list-style: none;
   margin: 0 auto;
   padding: 0;
@@ -634,7 +634,7 @@ html, body {
   overflow-y: auto;
   counter-reset: lb;
 }
-#leaderboard-list li {
+#leaderboard-list li, #pause-leaderboard-list li {
   counter-increment: lb;
   display: flex;
   align-items: baseline;
@@ -643,23 +643,25 @@ html, body {
   font-size: 13px;
   border-bottom: 1px solid rgba(120, 120, 168, 0.18);
 }
-#leaderboard-list li::before {
+#leaderboard-list li::before, #pause-leaderboard-list li::before {
   content: counter(lb);
   color: var(--text-dim);
   font-size: 11px;
   min-width: 20px;
   text-align: right;
 }
-#leaderboard-list li.lb-empty {
+#leaderboard-list li.lb-empty, #pause-leaderboard-list li.lb-empty {
   justify-content: center;
   color: var(--text-dim);
 }
-#leaderboard-list li.lb-empty::before { content: ''; min-width: 0; }
-#leaderboard-list li.lb-mine { color: var(--accent); font-weight: bold; }
+#leaderboard-list li.lb-empty::before,
+#pause-leaderboard-list li.lb-empty::before { content: ''; min-width: 0; }
+#leaderboard-list li.lb-mine, #pause-leaderboard-list li.lb-mine { color: var(--accent); font-weight: bold; }
 .lb-name { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-rounds { color: var(--text-dim); }
 .lb-rounds::after { content: ' rnds'; font-size: 10px; }
-#leaderboard-list li.lb-mine .lb-rounds { color: var(--accent); }
+#leaderboard-list li.lb-mine .lb-rounds,
+#pause-leaderboard-list li.lb-mine .lb-rounds { color: var(--accent); }
 
 /* Tablet & landscape phones — tighten HUD, hide keyboard hotkeys */
 @media (max-width: 720px) {

@@ -69,14 +69,14 @@ const Scoreboard = (function () {
 
   // --- rendering -------------------------------------------------------
 
-  function renderLeaderboard(scores, highlight) {
-    if (!els.list) return;
-    els.list.innerHTML = '';
+  function renderListInto(listEl, scores, highlight) {
+    if (!listEl) return;
+    listEl.innerHTML = '';
     if (!scores.length) {
       const li = document.createElement('li');
       li.className = 'lb-empty';
       li.textContent = 'No scores yet — be the first!';
-      els.list.appendChild(li);
+      listEl.appendChild(li);
       return;
     }
     scores.forEach((s) => {
@@ -87,8 +87,12 @@ const Scoreboard = (function () {
       li.innerHTML =
         '<span class="lb-name">' + escapeHtml(s.name) + '</span>' +
         '<span class="lb-rounds">' + escapeHtml(s.rounds) + '</span>';
-      els.list.appendChild(li);
+      listEl.appendChild(li);
     });
+  }
+
+  function renderLeaderboard(scores, highlight) {
+    renderListInto(els.list, scores, highlight);
   }
 
   async function loadLeaderboard(highlight) {
@@ -99,6 +103,20 @@ const Scoreboard = (function () {
       return true;
     } catch (_) {
       els.leaderboard.hidden = true;
+      return false;
+    }
+  }
+
+  // Public helper: fetch + render into an arbitrary <ol>/<ul>. Returns true
+  // on success, false if the backend is unreachable. Used by the pause screen.
+  async function loadInto(listEl) {
+    if (!listEl) return false;
+    if (!API_BASE) return false;
+    try {
+      const scores = await fetchScores();
+      renderListInto(listEl, scores, null);
+      return true;
+    } catch (_) {
       return false;
     }
   }
@@ -185,5 +203,5 @@ const Scoreboard = (function () {
     if (els.restartBtn) els.restartBtn.addEventListener('click', restart);
   }
 
-  return { init, notifyGameOver, reset };
+  return { init, notifyGameOver, reset, loadInto, hasBackend: () => !!API_BASE };
 })();
