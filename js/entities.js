@@ -991,7 +991,9 @@ function spawnEnemy() {
   const baseHp = CONFIG.WAVE.BASE_HP + (S.round - 1) * CONFIG.WAVE.HP_PER_ROUND;
   const baseSpeed = CONFIG.WAVE.BASE_SPEED + (S.round - 1) * CONFIG.WAVE.SPEED_PER_ROUND;
   const hp = baseHp * def.hpMul * modMul('enemy.hpMul');
-  const speed = baseSpeed * def.speedMul * modMul('enemy.speedMul');
+  // Round 1 grace: enemies crawl so new players have time to react
+  const roundMul = S.round === 1 ? 0.4 : 1;
+  const speed = baseSpeed * def.speedMul * modMul('enemy.speedMul') * roundMul;
   const size = CONFIG.WAVE.ENEMY_SIZE * def.sizeMul;
   const angle = Math.random() * Math.PI * 2;
   const r = S.mapRadius;
