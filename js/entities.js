@@ -22,12 +22,10 @@ function sideOfBuilding(b, fromX, fromY) {
   return null;
 }
 
-// Try pushing an item from (srcX, srcY) into the tile in direction `dir`.
-// Accepts any of: an HQ tile (ore is deposited to inventory), a building
-// (deliverToBuilding decides if it fits), or a conveyor (item rides the belt).
-// Returns true on success. Used by harvesters, HQ output, plant output, and
-// splitter outputs — so any of those can connect to an adjacent building
-// directly without an intermediate conveyor.
+// Push to any acceptor (HQ tile, any building, conveyor). Used by splitters,
+// which the user explicitly wants to be able to feed buildings directly so
+// you don't have to glue a single conveyor tile between a splitter and a
+// plant / turret.
 function tryPushItem(srcX, srcY, dir, itemType) {
   const dv = DIRS[dir];
   const nx = srcX + dv.dx;
@@ -40,6 +38,27 @@ function tryPushItem(srcX, srcY, dir, itemType) {
   }
   const b = getBuildingAt(nx, ny);
   if (b) return deliverToBuilding(b, itemType, srcX, srcY);
+  const c = getConveyorAt(nx, ny);
+  if (c) {
+    if (c.item) return false;
+    if (c.dir === OPPOSITE[dir]) return false;
+    c.item = { type: itemType, progress: 0 };
+    return true;
+  }
+  return false;
+}
+
+// Push restricted to transport tiles only — conveyors and splitters. Used by
+// producers (harvester, HQ, refinery, plant) so their output MUST flow through
+// the belt network rather than skipping straight into an adjacent consumer.
+// This preserves the factory + logistics gameplay loop (forces players to plan
+// belt routes for ammo/plate delivery into turrets/plants).
+function tryPushToTransport(srcX, srcY, dir, itemType) {
+  const dv = DIRS[dir];
+  const nx = srcX + dv.dx;
+  const ny = srcY + dv.dy;
+  const b = getBuildingAt(nx, ny);
+  if (b && b.type === 'splitter') return deliverToBuilding(b, itemType, srcX, srcY);
   const c = getConveyorAt(nx, ny);
   if (c) {
     if (c.item) return false;
@@ -476,7 +495,7 @@ function pushToOutputConveyor(b, itemType) {
   if (b._outputCursor == null) b._outputCursor = 0;
   for (let i = 0; i < 4; i++) {
     const idx = (b._outputCursor + i) % 4;
-    if (tryPushItem(b.x, b.y, CW_DIRS[idx], itemType)) {
+    if (tryPushToTransport(b.x, b.y, CW_DIRS[idx], itemType)) {
       b._outputCursor = (idx + 1) % 4;
       return true;
     }
@@ -504,7 +523,7 @@ function pushFromHQ(itemType) {
   for (let i = 0; i < cands.length; i++) {
     const idx = (h._outputCursor + i) % cands.length;
     const c = cands[idx];
-    if (tryPushItem(c.x, c.y, c.dir, itemType)) {
+    if (tryPushToTransport(c.x, c.y, c.dir, itemType)) {
       h._outputCursor = (idx + 1) % cands.length;
       return true;
     }
