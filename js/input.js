@@ -103,6 +103,31 @@ const Input = {
       }
     });
 
+    // Konami code: ↑ ↑ ↓ ↓ ← → ← → B A — toggles HQ invincibility (dev mode)
+    const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+    let konamiIdx = 0;
+    window.addEventListener('keydown', e => {
+      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      const expected = KONAMI[konamiIdx];
+      if (key === expected) {
+        konamiIdx++;
+        if (konamiIdx === KONAMI.length) {
+          konamiIdx = 0;
+          State.devInvincible = !State.devInvincible;
+          Input.refreshDevBadge();
+          if (State.hq) {
+            const hcx = State.hq.x + State.hq.size / 2;
+            const hcy = State.hq.y + State.hq.size / 2;
+            addFloater(hcx, hcy - 1.2, State.devInvincible ? '🛡 DEV MODE' : 'DEV MODE OFF', '#5af7ff');
+          }
+          Sound.waveClear();
+        }
+      } else {
+        // Allow restart from a fresh ↑ if that's where we are
+        konamiIdx = (key === KONAMI[0]) ? 1 : 0;
+      }
+    });
+
     // The Restart / Play Again button and the score form are wired up in
     // js/scoreboard.js (Scoreboard.init), so the game-over flow lives in one place.
 
@@ -141,6 +166,12 @@ const Input = {
     if (!btn) return;
     btn.textContent = enabled ? '🔊' : '🔇';
     btn.title = enabled ? 'Mute (M)' : 'Unmute (M)';
+  },
+
+  refreshDevBadge() {
+    const el = document.getElementById('dev-badge');
+    if (!el) return;
+    el.hidden = !State.devInvincible;
   },
 
   refreshMusicUI() {

@@ -938,11 +938,11 @@ function updateEnemies(dt) {
     const dx = hcx - e.x, dy = hcy - e.y;
     const d = Math.hypot(dx, dy);
     if (d < S.hq.size / 2 + 0.3) {
-      S.hq.hp -= def.damage * modMul('enemy.hqDamageMul');
+      if (!S.devInvincible) S.hq.hp -= def.damage * modMul('enemy.hqDamageMul');
       e._dead = true;
       spawnParticles(e.x, e.y, def.color, 14, 4);
-      addFloater(hcx, hcy - 0.5, `-${def.damage}`, def.color);
-      if (!S.gameOver) Sound.hqDamage();
+      addFloater(hcx, hcy - 0.5, S.devInvincible ? '🛡' : `-${def.damage}`, S.devInvincible ? '#5af7ff' : def.color);
+      if (!S.gameOver && !S.devInvincible) Sound.hqDamage();
       if (S.hq.hp <= 0) {
         S.hq.hp = 0;
         if (!S.gameOver) { S.gameOver = true; Sound.gameOver(); }
