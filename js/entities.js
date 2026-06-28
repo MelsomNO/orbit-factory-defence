@@ -41,10 +41,7 @@ function tryPushItem(srcX, srcY, dir, itemType) {
   const c = getConveyorAt(nx, ny);
   if (c) {
     if (c.item) return false;
-    // Belt must not be aimed AT the source. Same direction (output) or
-    // perpendicular (corner-from-building) both work — the latter lets the
-    // player turn a belt immediately after a factory or splitter.
-    if (c.dir === OPPOSITE[dir]) return false;
+    if (!sourceCanFeedConveyor(c, dir)) return false;
     c.item = { type: itemType, progress: 0 };
     return true;
   }
@@ -65,12 +62,39 @@ function tryPushToTransport(srcX, srcY, dir, itemType) {
   const c = getConveyorAt(nx, ny);
   if (c) {
     if (c.item) return false;
-    if (c.dir === OPPOSITE[dir]) return false; // only reject belts aimed back at source
+    if (!sourceCanFeedConveyor(c, dir)) return false;
     c.item = { type: itemType, progress: 0 };
     return true;
   }
   return false;
 }
+
+// Whether a producer at (srcX, srcY) pushing direction `dir` is allowed to
+// drop onto belt `c`. Rules:
+//   1. Belt aimed back at source -> reject (belt would carry item back).
+//   2. Belt aimed away from source (straight) -> accept.
+//   3. Belt perpendicular (corner-from-building) -> accept ONLY if the belt
+//      has no other input source. This prevents a belt running sideways past
+//      a building from being treated as the building's output target.
+function sourceCanFeedConveyor(c, dir) {
+  if (c.dir === OPPOSITE[dir]) return false;
+  if (c.dir === dir) return true;
+  // perpendicular — check that nothing else feeds this belt
+  const sourceSide = OPPOSITE[dir]; // side of belt where the source sits
+  for (const side of ['N', 'S', 'E', 'W']) {
+    if (side === c.dir || side === sourceSide) continue;
+    const sdv = DIRS[side];
+    const sx = c.x + sdv.dx;
+    const sy = c.y + sdv.dy;
+    const sc = getConveyorAt(sx, sy);
+    if (sc && sc.dir === OPPOSITE[side]) return false;
+    const sb = getBuildingAt(sx, sy);
+    if (sb && canBuildingOutputToward(sb, OPPOSITE[side])) return false;
+    if (isHQTile(sx, sy)) return false;
+  }
+  return true;
+}
+
 function dirBetween(ax, ay, bx, by) {
   if (bx > ax) return 'E';
   if (bx < ax) return 'W';
@@ -135,14 +159,15 @@ function getConveyorConnections(c) {
     if (adj) { if (adj.dir === OPPOSITE[side]) conn[side] = true; continue; }
     const adjB = getBuildingAt(ax, ay);
     if (adjB) {
-      // Show arm whenever the building can output toward us — covers both
-      // straight (belt continues outward) and corner-from-building setups.
-      // The "belt aimed back at building" case is impossible to render here
-      // because that side IS the output (handled by conn[c.dir] = true).
-      if (canBuildingOutputToward(adjB, OPPOSITE[side])) conn[side] = true;
+      // Only draw the arm if the building would actually feed this belt
+      // (same rules as sourceCanFeedConveyor: straight away, or corner with
+      // no other input). The push direction from building toward us is
+      // OPPOSITE[side].
+      if (canBuildingOutputToward(adjB, OPPOSITE[side]) &&
+          sourceCanFeedConveyor(c, OPPOSITE[side])) conn[side] = true;
       continue;
     }
-    if (isHQTile(ax, ay)) conn[side] = true; // HQ pushes plates/ore out any side
+    if (isHQTile(ax, ay) && sourceCanFeedConveyor(c, OPPOSITE[side])) conn[side] = true;
   }
   return conn;
 }
