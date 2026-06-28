@@ -41,10 +41,10 @@ function tryPushItem(srcX, srcY, dir, itemType) {
   const c = getConveyorAt(nx, ny);
   if (c) {
     if (c.item) return false;
-    // Belt must be aimed AWAY from the source so the player explicitly chose
-    // this side as an output. A belt running sideways past the source is
-    // ignored (no accidental side-pickup).
-    if (c.dir !== dir) return false;
+    // Belt must not be aimed AT the source. Same direction (output) or
+    // perpendicular (corner-from-building) both work — the latter lets the
+    // player turn a belt immediately after a factory or splitter.
+    if (c.dir === OPPOSITE[dir]) return false;
     c.item = { type: itemType, progress: 0 };
     return true;
   }
@@ -65,7 +65,7 @@ function tryPushToTransport(srcX, srcY, dir, itemType) {
   const c = getConveyorAt(nx, ny);
   if (c) {
     if (c.item) return false;
-    if (c.dir !== dir) return false; // belt must flow away from source
+    if (c.dir === OPPOSITE[dir]) return false; // only reject belts aimed back at source
     c.item = { type: itemType, progress: 0 };
     return true;
   }
@@ -135,13 +135,14 @@ function getConveyorConnections(c) {
     if (adj) { if (adj.dir === OPPOSITE[side]) conn[side] = true; continue; }
     const adjB = getBuildingAt(ax, ay);
     if (adjB) {
-      // Building feeds this belt only when (a) it can output toward us and
-      // (b) the belt is aimed away from it (c.dir points opposite of `side`).
-      if (canBuildingOutputToward(adjB, OPPOSITE[side]) && c.dir === OPPOSITE[side]) conn[side] = true;
+      // Show arm whenever the building can output toward us — covers both
+      // straight (belt continues outward) and corner-from-building setups.
+      // The "belt aimed back at building" case is impossible to render here
+      // because that side IS the output (handled by conn[c.dir] = true).
+      if (canBuildingOutputToward(adjB, OPPOSITE[side])) conn[side] = true;
       continue;
     }
-    // HQ pushes plates/ore — same alignment rule
-    if (isHQTile(ax, ay) && c.dir === OPPOSITE[side]) conn[side] = true;
+    if (isHQTile(ax, ay)) conn[side] = true; // HQ pushes plates/ore out any side
   }
   return conn;
 }
