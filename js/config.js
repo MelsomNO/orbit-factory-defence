@@ -68,7 +68,7 @@ const CONFIG = {
                       storage: { maxTier: 2, baseCost: 12, perTier: { inputBufferMax: +1, outputBufferMax: +1 } } },
     missile_plant:  { speed: { maxTier: 3, baseCost: 15, perTier: { time: -0.3 } },
                       storage: { maxTier: 2, baseCost: 20, perTier: { inputBufferMax: +1, outputBufferMax: +1 } } },
-    power_plant:    { speed: { maxTier: 3, baseCost: 10, perTier: { regen: +2 } },
+    power_plant:    { speed: { maxTier: 3, baseCost: 10, perTier: { regen: +1 } },
                       storage: { maxTier: 2, baseCost: 15, perTier: { maxPower: +5 } } },
     harvester:      { speed: { maxTier: 3, baseCost: 5,  perTier: { rate: -0.2 } },
                       storage: { maxTier: 2, baseCost: 8,  perTier: { buffer: +1 } } },
@@ -77,7 +77,7 @@ const CONFIG = {
     missile_turret: { speed: { maxTier: 3, baseCost: 20, perTier: { cooldown: -0.2 } },
                       storage: { maxTier: 2, baseCost: 25, perTier: { range: +1.0 }, label: 'Range' } },
   },
-  POWER_BASE_REGEN_PER_PLANT: 4,
+  POWER_BASE_REGEN_PER_PLANT: 2,
 
   // ─── Modifications ────────────────────────────────────────────────────────
   // Roguelike-style permanent perks chosen after each wave clear.
@@ -299,12 +299,12 @@ const CONFIG = {
 
   TURRETS: {
     gun_turret: {
-      range: 4.2, damage: 4, cooldown: 0.35,
+      range: 4.2, damage: 9, cooldown: 0.35,
       ammo: 'bullet', ammoCost: 1,
       projectileSpeed: 14, projectileColor: '#e0e0f0',
     },
     missile_turret: {
-      range: 6.5, damage: 22, cooldown: 1.6,
+      range: 6.5, damage: 45, cooldown: 1.6,
       ammo: 'missile', ammoCost: 1,
       projectileSpeed: 7, splash: 1.4,
       projectileColor: '#ff8050', homing: true,
