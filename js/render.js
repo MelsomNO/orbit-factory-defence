@@ -428,9 +428,9 @@ const Render = {
       ctx.save();
       switch (b.type) {
         case 'harvester': this.drawHarvester(ctx, p, sz, b); break;
-        case 'refinery': this.drawFactory(ctx, p, sz, b, 'R', '#80d0e0'); break;
-        case 'bullet_plant': this.drawFactory(ctx, p, sz, b, 'B', '#c0c0d0'); break;
-        case 'missile_plant': this.drawFactory(ctx, p, sz, b, 'M', '#ff8050'); break;
+        case 'refinery': this.drawFactory(ctx, p, sz, b, null, '#80d0e0'); break;
+        case 'bullet_plant': this.drawFactory(ctx, p, sz, b, 'bullet', '#c0c0d0'); break;
+        case 'missile_plant': this.drawFactory(ctx, p, sz, b, 'missile', '#ff8050'); break;
         case 'power_plant': this.drawPowerPlant(ctx, p, sz, b); break;
         case 'gun_turret': this.drawTurret(ctx, p, sz, b, '#c0c0d0', 'gun'); break;
         case 'missile_turret': this.drawTurret(ctx, p, sz, b, '#ff8050', 'missile'); break;
@@ -512,16 +512,23 @@ const Render = {
     }
   },
 
-  drawFactory(ctx, p, sz, b, letter, color) {
+  drawFactory(ctx, p, sz, b, innerIcon, color) {
     ctx.fillStyle = '#1a1a30';
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     roundRect(ctx, p.x - sz, p.y - sz, sz * 2, sz * 2, 3, true, true);
-    ctx.fillStyle = color;
-    ctx.font = `bold ${Math.max(10, sz * 1.0)}px monospace`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(letter, p.x, p.y);
+    // Gear spins only while producing; angle accumulated per-building so it
+    // resumes from its last position rather than jumping.
+    const now = performance.now();
+    if (b.working) {
+      const dt = Math.min(0.1, (now - (b._gearLastT || now)) / 1000);
+      b._gearAngle = (b._gearAngle || 0) + dt * 2.2;
+    }
+    b._gearLastT = now;
+    drawGear(ctx, p.x, p.y, sz * 0.78, b._gearAngle || 0, color);
+    // Overlay ammo-type icon for plants (refinery has no inner icon)
+    if (innerIcon === 'bullet') drawBulletIcon(ctx, p.x, p.y, sz * 0.35, color);
+    else if (innerIcon === 'missile') drawMissileIcon(ctx, p.x, p.y, sz * 0.42, color);
     const recipe = CONFIG.FACTORIES[b.type];
     const inMax = effectiveBufferMax(b, 'inputBufferMax');
     const outMax = effectiveBufferMax(b, 'outputBufferMax');
@@ -1081,6 +1088,92 @@ function drawArrow(ctx, x, y, dv, size) {
   ctx.moveTo(x, y);
   ctx.lineTo(x - dv.dx * size - perp.dx * size * 0.55, y - dv.dy * size - perp.dy * size * 0.55);
   ctx.stroke();
+}
+
+// 8-tooth gear icon centered at (cx, cy). Outer radius = r. Rotates by `angle`.
+// Dark fill + colored stroke matches the factory building palette.
+function drawGear(ctx, cx, cy, r, angle, color) {
+  const teeth = 8;
+  const inner = r * 0.78;          // root circle (between teeth)
+  const toothHalfAng = Math.PI / teeth * 0.45;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(angle);
+  ctx.beginPath();
+  for (let i = 0; i < teeth; i++) {
+    const base = (i / teeth) * Math.PI * 2;
+    const a0 = base - toothHalfAng;
+    const a1 = base + toothHalfAng;
+    const a2 = base + Math.PI * 2 / teeth - toothHalfAng;
+    // Tooth top edge (outer arc-approx as two corners)
+    ctx.lineTo(Math.cos(a0) * r, Math.sin(a0) * r);
+    ctx.lineTo(Math.cos(a1) * r, Math.sin(a1) * r);
+    // Drop back down to root, then arc along root to next tooth
+    ctx.lineTo(Math.cos(a1) * inner, Math.sin(a1) * inner);
+    ctx.arc(0, 0, inner, a1, a2);
+  }
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(40,40,70,0.55)';
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // Center hub
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.22, 0, Math.PI * 2);
+  ctx.fillStyle = '#0c0c1a';
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Small bullet — vertical pill with a pointed cap
+function drawBulletIcon(ctx, cx, cy, size, color) {
+  const w = size * 0.7, h = size * 1.4;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(-w / 2, h / 2);
+  ctx.lineTo(-w / 2, -h * 0.15);
+  ctx.quadraticCurveTo(0, -h * 0.75, w / 2, -h * 0.15);
+  ctx.lineTo(w / 2, h / 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#0c0c1a';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Small missile — triangle nose + body + fins
+function drawMissileIcon(ctx, cx, cy, size, color) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(-Math.PI / 2); // point upward
+  const len = size * 1.6, w = size * 0.55;
+  ctx.fillStyle = color;
+  // body
+  ctx.fillRect(-len * 0.35, -w / 2, len * 0.6, w);
+  // nose cone
+  ctx.beginPath();
+  ctx.moveTo(len * 0.25, -w / 2);
+  ctx.lineTo(len * 0.55, 0);
+  ctx.lineTo(len * 0.25, w / 2);
+  ctx.closePath();
+  ctx.fill();
+  // tail fins
+  ctx.beginPath();
+  ctx.moveTo(-len * 0.35, -w / 2);
+  ctx.lineTo(-len * 0.55, -w);
+  ctx.lineTo(-len * 0.2, -w / 2);
+  ctx.moveTo(-len * 0.35, w / 2);
+  ctx.lineTo(-len * 0.55, w);
+  ctx.lineTo(-len * 0.2, w / 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 function roundRect(ctx, x, y, w, h, r, fill, stroke) {

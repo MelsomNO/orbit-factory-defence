@@ -155,7 +155,8 @@ html, body {
 .build-btn.active { background: var(--accent-dim); border-color: var(--accent); color: #fff; }
 .build-btn.disabled { opacity: 0.4; pointer-events: none; }
 
-.build-btn .icon { font-size: 18px; line-height: 1; }
+.build-btn .icon { font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.build-btn .icon svg { display: block; width: 1.4em; height: 1.4em; }
 .build-btn .label { font-size: 9px; margin-top: 2px; letter-spacing: 0.5px; }
 .build-btn .cost { font-size: 9px; color: var(--text-dim); margin-top: 1px; }
 .build-btn.active .cost { color: var(--text); }
