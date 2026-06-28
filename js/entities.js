@@ -22,17 +22,33 @@ function sideOfBuilding(b, fromX, fromY) {
   return null;
 }
 
-// Try pushing an item to an adjacent conveyor in a specific direction. Returns true on success.
-function tryPushToConveyor(srcX, srcY, dir, itemType) {
+// Try pushing an item from (srcX, srcY) into the tile in direction `dir`.
+// Accepts any of: an HQ tile (ore is deposited to inventory), a building
+// (deliverToBuilding decides if it fits), or a conveyor (item rides the belt).
+// Returns true on success. Used by harvesters, HQ output, plant output, and
+// splitter outputs — so any of those can connect to an adjacent building
+// directly without an intermediate conveyor.
+function tryPushItem(srcX, srcY, dir, itemType) {
   const dv = DIRS[dir];
-  const c = getConveyorAt(srcX + dv.dx, srcY + dv.dy);
-  if (!c || c.item) return false;
-  // conveyor accepts on any side except its output; the side facing back to us is OPPOSITE(dir)
-  if (c.dir === OPPOSITE[dir]) return false;
-  c.item = { type: itemType, progress: 0 };
-  return true;
+  const nx = srcX + dv.dx;
+  const ny = srcY + dv.dy;
+  if (isHQTile(nx, ny)) {
+    if (itemType !== 'ore') return false;
+    State.inventory.ore = (State.inventory.ore || 0) + 1;
+    addFloater(srcX + 0.5, srcY + 0.3, '+1◆', CONFIG.COLORS.hq);
+    return true;
+  }
+  const b = getBuildingAt(nx, ny);
+  if (b) return deliverToBuilding(b, itemType, srcX, srcY);
+  const c = getConveyorAt(nx, ny);
+  if (c) {
+    if (c.item) return false;
+    if (c.dir === OPPOSITE[dir]) return false;
+    c.item = { type: itemType, progress: 0 };
+    return true;
+  }
+  return false;
 }
-
 function dirBetween(ax, ay, bx, by) {
   if (bx > ax) return 'E';
   if (bx < ax) return 'W';
@@ -460,7 +476,7 @@ function pushToOutputConveyor(b, itemType) {
   if (b._outputCursor == null) b._outputCursor = 0;
   for (let i = 0; i < 4; i++) {
     const idx = (b._outputCursor + i) % 4;
-    if (tryPushToConveyor(b.x, b.y, CW_DIRS[idx], itemType)) {
+    if (tryPushItem(b.x, b.y, CW_DIRS[idx], itemType)) {
       b._outputCursor = (idx + 1) % 4;
       return true;
     }
@@ -488,7 +504,7 @@ function pushFromHQ(itemType) {
   for (let i = 0; i < cands.length; i++) {
     const idx = (h._outputCursor + i) % cands.length;
     const c = cands[idx];
-    if (tryPushToConveyor(c.x, c.y, c.dir, itemType)) {
+    if (tryPushItem(c.x, c.y, c.dir, itemType)) {
       h._outputCursor = (idx + 1) % cands.length;
       return true;
     }
@@ -703,7 +719,7 @@ function updateLogistics(dt) {
       // Try alternating output first, then fall back to the other
       for (let i = 0; i < 2; i++) {
         const dir = outs[(b.nextOutput + i) % 2];
-        if (tryPushToConveyor(b.x, b.y, dir, b.item.type)) {
+        if (tryPushItem(b.x, b.y, dir, b.item.type)) {
           b.item = null;
           b.nextOutput = (b.nextOutput + i + 1) % 2;
           break;
