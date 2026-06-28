@@ -266,7 +266,10 @@ const Render = {
     if (!State._chevronT) State._chevronT = 0;
     if (!State.paused && !State.gameOver) State._chevronT += (performance.now() - (State._chevronLast || performance.now())) / 1000;
     State._chevronLast = performance.now();
-    const scroll = (State._chevronT * CONFIG.CONVEYOR.SPEED * 0.35) % 1;
+    // Scroll speed mirrors actual belt speed so chevrons visibly tick faster
+    // when a belt-speed modifier is active.
+    const speedScale = (typeof modMul === 'function') ? modMul('conveyor.speedMul') : 1;
+    const scroll = (State._chevronT * CONFIG.CONVEYOR.SPEED * speedScale * 0.35) % 1;
     ctx.save();
     // PASS 1: tracks + chevrons. Compute connectivity / corner-pair once and stash so PASS 2
     // doesn't redo the work.
