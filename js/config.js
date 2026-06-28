@@ -3,7 +3,7 @@ const CONFIG = {
   TILE: 36,                    // logical pixel size of one tile
   INITIAL_RADIUS: 7,           // playfield radius in tiles
   RADIUS_GROWTH: 1,            // tiles added each round
-  MAX_RADIUS: 20,
+  MAX_RADIUS: 250,
 
   HQ_HP: 100,
   HQ_SIZE: 2,                  // hq occupies 2x2 tiles
