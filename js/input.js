@@ -250,6 +250,7 @@ const Input = {
       pickupGrab.dragging = true;
       pickupGrab.x = w.x; pickupGrab.y = w.y;
       S.pointer.draggingPickup = pickupGrab;
+      Sound.pickupOre();
       return;
     }
 
@@ -263,6 +264,7 @@ const Input = {
       reduceNodeReserves(node, CONFIG.HARVEST.CLICK_AMOUNT);
       S.pointer.draggingPickup = pickup;
       pickup.x = w.x; pickup.y = w.y;
+      Sound.pickupOre();
       return;
     }
 
@@ -333,6 +335,7 @@ const Input = {
           S.inventory[p.type] = (S.inventory[p.type] || 0) + 1;
           addFloater(hcx, hcy - 0.5, `+1${p.type==='ore'?'◆':''}`, CONFIG.COLORS.hq);
           S.pickups.splice(S.pickups.indexOf(p), 1);
+          Sound.depositOre();
         } else {
           p.vx = 0; p.vy = 0; p.life = 18;
         }

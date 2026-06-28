@@ -116,6 +116,18 @@ const Sound = {
     this._tone({ freq: 920,  freqEnd: 820,  duration: 0.14, type: 'sine',     volume: 0.035, attack: 0.004 });
   },
 
+  // Light "tink" — picking ore off a node or grabbing a floating pickup
+  pickupOre() {
+    this._tone({ freq: 880, freqEnd: 1320, duration: 0.07, type: 'triangle', volume: 0.10, attack: 0.002 });
+    this._noiseBurst(0.03, 0.03, 5000);
+  },
+
+  // Satisfying "clink" — manually delivering ore into HQ
+  depositOre() {
+    this._tone({ freq: 660, freqEnd: 990, duration: 0.10, type: 'triangle', volume: 0.14, attack: 0.002 });
+    this._tone({ freq: 330, freqEnd: 220, duration: 0.12, type: 'sine',     volume: 0.10, attack: 0.003, delay: 0.02 });
+  },
+
   // Solid placement "thunk"
   placed() {
     this._tone({ freq: 320, freqEnd: 140, duration: 0.08, type: 'triangle', volume: 0.18, attack: 0.001 });
