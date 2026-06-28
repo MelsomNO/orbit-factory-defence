@@ -88,7 +88,8 @@ const Input = {
 
     document.getElementById('intro-close').addEventListener('click', () => {
       document.getElementById('intro').hidden = true;
-      try { localStorage.setItem('orbit-intro-seen-v3', '1'); } catch (_) {}
+      // Game was held in a paused state while the intro was up; resume it now.
+      State.paused = false;
     });
 
     // Info panel close / demolish / conveyor → splitter
@@ -124,6 +125,11 @@ const Input = {
 
   togglePause(force) {
     if (State.gameOver) return;
+    // While the intro modal is up the game must stay paused — pause button
+    // and Space-key shouldn't be able to "Resume" the game until the player
+    // dismisses the intro.
+    const intro = document.getElementById('intro');
+    if (intro && !intro.hidden) return;
     State.paused = (force === undefined) ? !State.paused : !!force;
     document.getElementById('pause-overlay').hidden = !State.paused;
     const btn = document.getElementById('pause-btn');

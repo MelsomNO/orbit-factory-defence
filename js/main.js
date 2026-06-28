@@ -33,13 +33,11 @@
   Input.init(canvas);
   Scoreboard.init();
 
-  // Show intro on first launch (versioned key so updates re-show)
-  const INTRO_KEY = 'orbit-intro-seen-v3';
-  try {
-    if (!localStorage.getItem(INTRO_KEY)) {
-      document.getElementById('intro').hidden = false;
-    }
-  } catch (_) { document.getElementById('intro').hidden = false; }
+  // Always show the intro at the start of every session and freeze the game
+  // until the player dismisses it. The pause-overlay isn't used here so the
+  // intro can be the only modal on screen.
+  document.getElementById('intro').hidden = false;
+  State.paused = true;
 
   // HUD elements
   const els = {
