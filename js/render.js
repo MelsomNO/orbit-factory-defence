@@ -565,8 +565,8 @@ const Render = {
       ctx.fill();
       ctx.restore();
     }
-    // bolt
-    ctx.fillStyle = producing ? '#fff4a0' : CONFIG.COLORS.power;
+    // bolt — always visible; the halo/arcs below are the production tell
+    ctx.fillStyle = CONFIG.COLORS.power;
     ctx.beginPath();
     ctx.moveTo(p.x - sz * 0.2, p.y - sz * 0.7);
     ctx.lineTo(p.x + sz * 0.3, p.y - sz * 0.05);
