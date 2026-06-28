@@ -715,7 +715,9 @@ function updateFactories(dt) {
         }
       }
     } else if (f.type === 'power_plant') {
-      f.pulse = (f.pulse + dt) % 2.0;
+      // Only animate when actually contributing — pool not yet full.
+      f._producing = S.power.stored < S.power.max && effectivePowerPlantRegen(f) > 0;
+      if (f._producing) f.pulse = (f.pulse + dt) % 2.0;
     }
   }
   // Power regen: sum of per-plant regen, scaled by upgrades

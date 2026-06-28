@@ -548,12 +548,25 @@ const Render = {
   },
 
   drawPowerPlant(ctx, p, sz, b) {
+    const producing = !!b._producing;
     ctx.fillStyle = '#1a1a30';
     ctx.strokeStyle = CONFIG.COLORS.power;
     ctx.lineWidth = 2;
     roundRect(ctx, p.x - sz, p.y - sz, sz * 2, sz * 2, 3, true, true);
+    // Glow halo behind the bolt while producing
+    if (producing) {
+      const glow = (Math.sin(b.pulse * Math.PI) + 1) / 2;
+      ctx.save();
+      ctx.shadowColor = CONFIG.COLORS.power;
+      ctx.shadowBlur = 12 + glow * 8;
+      ctx.fillStyle = `rgba(255, 224, 64, ${0.25 + glow * 0.35})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, sz * 0.55, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
     // bolt
-    ctx.fillStyle = CONFIG.COLORS.power;
+    ctx.fillStyle = producing ? '#fff4a0' : CONFIG.COLORS.power;
     ctx.beginPath();
     ctx.moveTo(p.x - sz * 0.2, p.y - sz * 0.7);
     ctx.lineTo(p.x + sz * 0.3, p.y - sz * 0.05);
@@ -563,13 +576,40 @@ const Render = {
     ctx.lineTo(p.x + sz * 0.05, p.y + sz * 0.05);
     ctx.closePath();
     ctx.fill();
-    // pulse ring
+    if (!producing) return;
+    // Pulsing outer ring
     const pulse = (Math.sin(b.pulse * Math.PI) + 1) / 2;
-    ctx.strokeStyle = `rgba(255, 224, 64, ${pulse * 0.5})`;
+    ctx.strokeStyle = `rgba(255, 224, 64, ${pulse * 0.65})`;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(p.x, p.y, sz * (1.0 + pulse * 0.3), 0, Math.PI * 2);
     ctx.stroke();
+    // Electric arcs — three jagged sparks rotating around the bolt. Uses
+    // pulse phase as the random seed so all sparks tick together without
+    // needing extra per-frame state.
+    const arcCount = 3;
+    const baseAngle = b.pulse * Math.PI * 1.7;
+    ctx.strokeStyle = `rgba(255, 240, 160, ${0.55 + pulse * 0.4})`;
+    ctx.lineWidth = 1.2;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < arcCount; i++) {
+      const a = baseAngle + (i / arcCount) * Math.PI * 2;
+      const r0 = sz * 0.55;
+      const r1 = sz * (0.95 + pulse * 0.15);
+      const segs = 4;
+      ctx.beginPath();
+      for (let s = 0; s <= segs; s++) {
+        const t = s / segs;
+        const r = r0 + (r1 - r0) * t;
+        // Pseudo-random jitter — deterministic per (i, s, pulse-bin)
+        const jitter = Math.sin((i * 7 + s * 13 + Math.floor(b.pulse * 60)) * 12.9898) * 0.18;
+        const ang = a + jitter;
+        const x = p.x + Math.cos(ang) * r;
+        const y = p.y + Math.sin(ang) * r;
+        if (s === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
   },
 
   drawTurret(ctx, p, sz, b, color, kind) {

@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Orbit — Tower Factory Defense</title>
-  <link rel="stylesheet" href="styles.css?v=23">
+  <link rel="stylesheet" href="styles.css?v=24">
 </head>
 <body>
   <div id="game-container">
@@ -111,11 +111,23 @@
       </button>
       <button class="build-btn" data-tool="bullet_plant" data-cost="ore:10" data-hotkey="4" title="Bullet Plant (4)">
         <span class="hotkey">4</span>
-        <span class="icon sym-bullet-plant">▣</span><span class="label">Bullet Plant</span><span class="cost">10◆</span>
+        <span class="icon sym-bullet-plant">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path d="M9 21 L9 8 Q12 2 15 8 L15 21 Z" fill="currentColor" stroke="#0c0c1a" stroke-width="0.8" stroke-linejoin="round"/>
+            <line x1="9" y1="14" x2="15" y2="14" stroke="#0c0c1a" stroke-width="0.6"/>
+          </svg>
+        </span><span class="label">Bullet Plant</span><span class="cost">10◆</span>
       </button>
       <button class="build-btn" data-tool="missile_plant" data-cost="ore:20" data-hotkey="5" title="Missile Plant (5)">
         <span class="hotkey">5</span>
-        <span class="icon sym-missile-plant">▤</span><span class="label">Missile Plant</span><span class="cost">20◆</span>
+        <span class="icon sym-missile-plant">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <rect x="9.5" y="6" width="5" height="11" fill="currentColor"/>
+            <path d="M9.5 6 L12 1.5 L14.5 6 Z" fill="currentColor"/>
+            <path d="M9.5 17 L6.5 22 L9.5 19 Z M14.5 17 L17.5 22 L14.5 19 Z" fill="currentColor"/>
+            <circle cx="12" cy="10" r="0.9" fill="#0c0c1a"/>
+          </svg>
+        </span><span class="label">Missile Plant</span><span class="cost">20◆</span>
       </button>
       <button class="build-btn" data-tool="power_plant" data-cost="ore:15" data-hotkey="6" title="Power Plant (6)">
         <span class="hotkey">6</span>
@@ -191,14 +203,14 @@
     </div>
   </div>
 
-  <script src="js/config.js?v=23"></script>
-  <script src="js/state.js?v=23"></script>
-  <script src="js/world.js?v=23"></script>
-  <script src="js/sound.js?v=23"></script>
-  <script src="js/entities.js?v=23"></script>
-  <script src="js/render.js?v=23"></script>
-  <script src="js/input.js?v=23"></script>
-  <script src="js/scoreboard.js?v=23"></script>
-  <script src="js/main.js?v=23"></script>
+  <script src="js/config.js?v=24"></script>
+  <script src="js/state.js?v=24"></script>
+  <script src="js/world.js?v=24"></script>
+  <script src="js/sound.js?v=24"></script>
+  <script src="js/entities.js?v=24"></script>
+  <script src="js/render.js?v=24"></script>
+  <script src="js/input.js?v=24"></script>
+  <script src="js/scoreboard.js?v=24"></script>
+  <script src="js/main.js?v=24"></script>
 </body>
 </html>
