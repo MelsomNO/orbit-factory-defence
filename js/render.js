@@ -565,17 +565,21 @@ const Render = {
       ctx.fill();
       ctx.restore();
     }
-    // bolt — always visible; the halo/arcs below are the production tell
-    ctx.fillStyle = CONFIG.COLORS.power;
+    // bolt — always visible; the halo/arcs below are the production tell.
+    // Outlined + bright fill so it reads clearly even when idle.
     ctx.beginPath();
-    ctx.moveTo(p.x - sz * 0.2, p.y - sz * 0.7);
-    ctx.lineTo(p.x + sz * 0.3, p.y - sz * 0.05);
-    ctx.lineTo(p.x - sz * 0.05, p.y - sz * 0.05);
-    ctx.lineTo(p.x + sz * 0.2, p.y + sz * 0.7);
-    ctx.lineTo(p.x - sz * 0.3, p.y + sz * 0.05);
-    ctx.lineTo(p.x + sz * 0.05, p.y + sz * 0.05);
+    ctx.moveTo(p.x - sz * 0.22, p.y - sz * 0.78);
+    ctx.lineTo(p.x + sz * 0.34, p.y - sz * 0.05);
+    ctx.lineTo(p.x - sz * 0.06, p.y - sz * 0.05);
+    ctx.lineTo(p.x + sz * 0.22, p.y + sz * 0.78);
+    ctx.lineTo(p.x - sz * 0.34, p.y + sz * 0.05);
+    ctx.lineTo(p.x + sz * 0.06, p.y + sz * 0.05);
     ctx.closePath();
+    ctx.fillStyle = '#fff48a';
     ctx.fill();
+    ctx.strokeStyle = '#5a4400';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
     if (!producing) return;
     // Pulsing outer ring
     const pulse = (Math.sin(b.pulse * Math.PI) + 1) / 2;
