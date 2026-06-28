@@ -34,6 +34,9 @@ function generateWorld() {
   S.camera.manual = false;
   S.modifiers = {};
   S.modifierPick = null;
+  S.devInvincible = false;
+  S.devUsed = false;
+  if (typeof Input !== 'undefined' && Input.refreshDevBadge) Input.refreshDevBadge();
 
   spawnInitialNodes(CONFIG.RESOURCE_NODE.INITIAL);
   for (let i = 0; i < CONFIG.OBSTACLE.INITIAL; i++) addRandomObstacle();

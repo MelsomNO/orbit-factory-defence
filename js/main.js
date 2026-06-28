@@ -97,7 +97,7 @@
     if (S.gameOver) {
       els.gameOver.hidden = false;
       els.roundsSurvived.textContent = S.round;
-      Scoreboard.notifyGameOver(S.round);
+      Scoreboard.notifyGameOver(S.round, !!S.devUsed);
     } else {
       els.gameOver.hidden = true;
       Scoreboard.reset();

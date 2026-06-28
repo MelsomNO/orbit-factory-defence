@@ -113,14 +113,26 @@ const Input = {
         konamiIdx++;
         if (konamiIdx === KONAMI.length) {
           konamiIdx = 0;
-          State.devInvincible = !State.devInvincible;
-          Input.refreshDevBadge();
-          if (State.hq) {
-            const hcx = State.hq.x + State.hq.size / 2;
-            const hcy = State.hq.y + State.hq.size / 2;
-            addFloater(hcx, hcy - 1.2, State.devInvincible ? '🛡 DEV MODE' : 'DEV MODE OFF', '#5af7ff');
+          if (!State.devInvincible) {
+            // First activation: turn on invincibility and taint the run
+            State.devInvincible = true;
+            State.devUsed = true;
+            if (State.hq) {
+              const hcx = State.hq.x + State.hq.size / 2;
+              const hcy = State.hq.y + State.hq.size / 2;
+              addFloater(hcx, hcy - 1.2, '🛡 DEV MODE', '#5af7ff');
+            }
+            Sound.waveClear();
+          } else {
+            // Second activation: end the run (it won't count, scoreboard
+            // notifyGameOver will see State.devUsed and show the disclaimer)
+            State.devInvincible = false;
+            if (!State.gameOver) {
+              State.gameOver = true;
+              Sound.gameOver();
+            }
           }
-          Sound.waveClear();
+          Input.refreshDevBadge();
         }
       } else {
         // Allow restart from a fresh ↑ if that's where we are

@@ -131,13 +131,31 @@ const Scoreboard = (function () {
     els.restartBtn.hidden = false;
   }
 
+  // Show the dev-mode variant: this run is tainted, no submission, just
+  // a "did not count" notice and restart. Leaderboard still rendered for
+  // context if the backend is reachable.
+  function showDevTainted() {
+    if (els.form) els.form.hidden = true;
+    setMsg('🛡 Dev mode was active — this run did not count', 'err');
+    els.restartBtn.hidden = false;
+  }
+
   // Called every frame while gameOver is true; acts only on the rising edge.
-  async function notifyGameOver(rounds) {
+  async function notifyGameOver(rounds, devTainted) {
     if (handled) return;
     handled = true;
     lastRounds = rounds;
 
     if (!els) cacheEls();
+
+    // Dev-mode run: never submit, never collect a name. Optionally render
+    // the leaderboard for reference.
+    if (devTainted) {
+      showDevTainted();
+      if (API_BASE) await loadLeaderboard(null);
+      else if (els.leaderboard) els.leaderboard.hidden = true;
+      return;
+    }
 
     // No backend available at all → offline mode.
     if (!API_BASE) { showOffline(); return; }
