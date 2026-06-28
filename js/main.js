@@ -27,6 +27,14 @@
   window.addEventListener('load', () => setTimeout(updateVH, 200));
   setTimeout(updateVH, 1000);
 
+  // Format a number to at most one decimal place, stripping trailing .0.
+  // Used for modifier-affected stats (HP max, power regen/max) so the HUD
+  // doesn't get cluttered with float noise like 87.4999999.
+  function fmt1(n) {
+    if (!isFinite(n)) return '0';
+    return String(Math.round(n * 10) / 10);
+  }
+
   const canvas = document.getElementById('game-canvas');
   Render.init(canvas);
   generateWorld();
@@ -63,7 +71,7 @@
       ? `${S.enemiesRemainingToSpawn + S.enemies.length}🛸`
       : `${Math.max(0, Math.ceil(S.waveTimer))}s`;
     if (S.hq) {
-      els.hqHp.textContent = `${Math.max(0, Math.ceil(S.hq.hp))}/${S.hq.maxHp}`;
+      els.hqHp.textContent = `${Math.max(0, Math.ceil(S.hq.hp))}/${fmt1(S.hq.maxHp)}`;
       const frac = S.hq.hp / S.hq.maxHp;
       els.hqHp.classList.toggle('crit', frac <= 0.25);
       els.hqHp.classList.toggle('low', frac > 0.25 && frac <= 0.5);
@@ -73,7 +81,7 @@
     els.invOre.textContent = Math.floor(S.inventory.ore || 0);
     els.invPlate.textContent = `${Math.floor(S.hq ? S.hq.plateBuffer || 0 : 0)}/${CONFIG.HQ_RECIPE.outputBufferMax}`;
     els.invPower.textContent = Math.floor(S.power.stored);
-    els.invPowerMax.textContent = S.power.max;
+    els.invPowerMax.textContent = fmt1(S.power.max);
     els.startBtn.hidden = !(S.wavePhase === 'prep' || S.wavePhase === 'between');
     els.resetViewBtn.hidden = !S.camera.manual;
 
@@ -297,9 +305,9 @@
     } else if (sel.type === 'power_plant') {
       title = 'Power Plant';
       body =
-        row('+Max ⚡', effectivePowerPlantMax(sel)) +
-        row('Regen', `${effectivePowerPlantRegen(sel)} ⚡/s`) +
-        row('Global ⚡', `${Math.floor(State.power.stored)}/${State.power.max}`) +
+        row('+Max ⚡', fmt1(effectivePowerPlantMax(sel))) +
+        row('Regen', `${fmt1(effectivePowerPlantRegen(sel))} ⚡/s`) +
+        row('Global ⚡', `${Math.floor(State.power.stored)}/${fmt1(State.power.max)}`) +
         bar(State.power.max ? State.power.stored / State.power.max : 0, 'var(--power)');
       ipanel.demolish.hidden = false;
       ipanel.demolish.textContent = refundText('power_plant');
@@ -362,7 +370,7 @@
         row('Damage', `${def.damage}/s`) +
         row('Range', def.range.toFixed(1)) +
         row('Power draw', `${def.ammoCost} ⚡/s`) +
-        row('Global ⚡', `${Math.floor(State.power.stored)}/${State.power.max}`) +
+        row('Global ⚡', `${Math.floor(State.power.stored)}/${fmt1(State.power.max)}`) +
         bar(State.power.max ? State.power.stored / State.power.max : 0, 'var(--power)') +
         row('Status', status);
       ipanel.demolish.hidden = false;
